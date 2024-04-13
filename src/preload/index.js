@@ -1,20 +1,20 @@
-import { contextBridge } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron';
 
-// Custom APIs for renderer
-const api = {}
+// Define an API object that holds functions to perform IPC calls
+const api = {
+  // Function to add a user. It sends a message to the main process to invoke the 'add-user' channel
+  // `userId` is the argument passed which will be used by the main process to add a user into the database
+  addUser: (userId) => ipcRenderer.invoke('add-user', userId),
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  window.electron = electronAPI
-  window.api = api
-}
+  // Function to retrieve users. It sends a message to the main process to invoke the 'get-users' channel
+  // This function does not need to send any additional data
+  getUsers: () => ipcRenderer.invoke('get-users')
+};
+
+// Using contextBridge to expose the defined API object to the renderer process under the global
+// variable `window.electron`. This is a secure method recommended by Electron to expose any functionality
+// to the renderer process while keeping the Node.js environment isolated.
+contextBridge.exposeInMainWorld('electron', {
+  addUser: api.addUser, // Exposing the addUser function
+  getUsers: api.getUsers // Exposing the getUsers function
+});

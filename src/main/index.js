@@ -1,74 +1,104 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
+import sqlite3 from 'sqlite3'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 
+// Define the path to the SQLite database
+const dbPath = join(__dirname, '../../resources/database.sqlite')
+
+// Connect to the SQLite Database, and create it if it doesn't already exist
+const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+  if (err) {
+    console.error('Could not connect to database', err)
+  } else {
+    console.log('Connected to the database.')
+    // Create a user table if it doesn't exist
+    db.run(`CREATE TABLE IF NOT EXISTS user (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId TEXT UNIQUE,
+      total INTEGER DEFAULT 0
+    )`)
+  }
+})
+
+// Handle IPC call for adding a user
+ipcMain.handle('add-user', async (event, userId) => {
+  return new Promise((resolve, reject) => {
+    db.run(`INSERT INTO user (userId) VALUES (?)`, [userId], function (err) {
+      if (err) {
+        console.error('Failed to add user', err)
+        reject(new Error('Error adding user'))
+      } else {
+        console.log(`A row has been inserted with rowid ${this.lastID}`)
+        resolve(`User added with ID ${this.lastID}`)
+      }
+    })
+  })
+})
+
+// Handle IPC call for retrieving all users
+ipcMain.handle('get-users', async (event) => {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT id, userId, total FROM user', [], (err, rows) => {
+      if (err) {
+        console.error('Failed to retrieve users', err)
+        reject(new Error('Failed to retrieve users'))
+      } else {
+        resolve(rows)
+      }
+    })
+  })
+})
+
+// Function to create the main window of the Electron app
 function createWindow() {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon: process.platform === 'linux' ? join(__dirname, '../../resources/icon.png') : undefined,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
 
+  // Show window when it is ready to be displayed
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
+  // Handle external URLs by opening them in the default browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url)
+    return { action: 'deny' } // Prevent new window creation
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
+  // Load the correct URL in the window based on development or production environment
+  const rendererUrl = is.dev
+    ? process.env.ELECTRON_RENDERER_URL
+    : join(__dirname, '../renderer/index.html')
+  mainWindow.loadURL(rendererUrl)
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+// App readiness to create window
 app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+  electronApp.setAppUserModelId('com.yourdomain.yourapp')
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
   createWindow()
-
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
+  app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// Handle all windows closed
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    // If not on macOS
+    db.close(() => console.log('Database connection closed')) // Close the database connection properly
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.
