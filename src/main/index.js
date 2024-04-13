@@ -12,11 +12,20 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
     console.error('Could not connect to database', err);
   } else {
     console.log('Connected to the database.');
-    // Create a account table if it doesn't exist
+    // Create an account table if it doesn't exist
     db.run(`CREATE TABLE IF NOT EXISTS account (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       publicKey TEXT UNIQUE,
       totalProfit INTEGER DEFAULT 0
+    )`);
+    // Create an account_transactions table if it doesn't exist
+    db.run(`CREATE TABLE IF NOT EXISTS account_transactions (
+      transactionId INTEGER PRIMARY KEY AUTOINCREMENT, 
+      publicKey TEXT,
+      ticker TEXT,
+      cost DECIMAL,
+      profit DECIMAL,
+      FOREIGN KEY (publicKey) REFERENCES account (publicKey)
     )`);
   }
 });
@@ -47,6 +56,43 @@ ipcMain.handle('get-accounts', async (event) => {
         resolve(rows);
       }
     });
+  });
+});
+
+// Handle IPC call for adding a transaction
+ipcMain.handle('add-transaction', async (event, publicKey, ticker, cost, profit) => {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `INSERT INTO account_transactions (publicKey, ticker, cost, profit) VALUES (?, ?, ?, ?)`,
+      [publicKey, ticker, cost, profit],
+      function (err) {
+        if (err) {
+          console.error('Failed to add transaction', err);
+          reject(new Error('Error adding transaction'));
+        } else {
+          console.log(`A row has been inserted with rowid ${this.lastID}`);
+          resolve(`Transaction added with ID ${this.lastID}`);
+        }
+      }
+    );
+  });
+});
+
+// Handle IPC call for retrieving all transactions
+ipcMain.handle('get-transactions', async (event) => {
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT transactionId, publicKey, ticker, cost, profit FROM account_transactions',
+      [],
+      (err, rows) => {
+        if (err) {
+          console.error('Failed to retrieve transactions', err);
+          reject(new Error('Failed to retrieve transactions'));
+        } else {
+          resolve(rows);
+        }
+      }
+    );
   });
 });
 

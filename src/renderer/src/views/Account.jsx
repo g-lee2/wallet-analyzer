@@ -9,6 +9,7 @@ function Account() {
   // Function to handle adding a user when the button is clicked
   const handleAddAccount = async () => {
     await window.electron.addAccount(publicKey);  // Call the addAccount function exposed by preload.js
+    // Update the accountPublicKeyState to be passed and redirected to the right path
     setPublicKey("");  // Reset the input field
     await fetchAccounts();  // Refetch the list of accounts to update the UI
   };

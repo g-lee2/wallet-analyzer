@@ -8,7 +8,15 @@ const api = {
 
   // Function to retrieve accounts. It sends a message to the main process to invoke the 'get-accounts' channel
   // This function does not need to send any additional data
-  getAccounts: () => ipcRenderer.invoke('get-accounts')
+  getAccounts: () => ipcRenderer.invoke('get-accounts'),
+
+  // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transaction' channel
+  // `publicKey, ticker, cost, profit` is the argument passed which will be used by the main process to add a transaction into the database
+  addTransaction: () => ipcRenderer.invoke('add-transaction', publicKey, ticker, cost, profit),
+
+  // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transactions' channel
+  // This function does not need to send any additional data
+  getTransactions: () => ipcRenderer.invoke('get-transactions')
 };
 
 // Using contextBridge to expose the defined API object to the renderer process under the global
@@ -16,5 +24,7 @@ const api = {
 // to the renderer process while keeping the Node.js environment isolated.
 contextBridge.exposeInMainWorld('electron', {
   addAccount: api.addAccount, // Exposing the addAccunt function
-  getAccounts: api.getAccounts // Exposing the getAccounts function
+  getAccounts: api.getAccounts, // Exposing the getAccounts function
+  addTransaction: api.addTransaction, // Exposing the addTransaction function
+  getTransactions: api.getTransactions // Exposing the getTransactions function
 });
