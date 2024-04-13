@@ -4,8 +4,8 @@ const sqlite3 = require('sqlite3').verbose();
 // Import the path module to handle file paths
 const path = require('path');
 
-// Resolve the path to where the SQLite database will be located
-const dbPath = path.resolve(__dirname, 'accountdata.db');
+// Use path.join to clearly define the path from known segments
+const dbPath = path.join(__dirname, '../../resources/database.sqlite');
 
 // Connect to the SQLite database, or create it if it doesn't exist, and handle any errors that occur
 let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
