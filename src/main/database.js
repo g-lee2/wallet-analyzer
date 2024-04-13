@@ -37,6 +37,19 @@ db.serialize(() => {
   )`);
 });
 
+// Define a function to check if the user exists
+function checkAccountExists(publicKey) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT publicKey FROM account WHERE publicKey = ?', [publicKey], function (err, row) {
+      if (err) {
+        reject('Error checking account existence: ' + err.message);
+      } else {
+        resolve(row ? true : false); // true if account exists, false otherwise
+      }
+    });
+  });
+}
+
 // Define a function to add an account to the 'account' table
 function addAccount(publicKey, totalProfit) {
   return new Promise((resolve, reject) => {
@@ -109,5 +122,5 @@ function getTransactions() {
   });
 }
 
-// Export the all add, get, update functions so they can be used elsewhere in the project
-module.exports = { addAccount, getAccounts, addTransaction, getTransactions };
+// Export the all add, get, update, check account functions so they can be used elsewhere in the project
+module.exports = { checkAccountExists, addAccount, getAccounts, addTransaction, getTransactions };

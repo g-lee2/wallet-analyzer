@@ -30,6 +30,19 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
   }
 });
 
+// Handle IPC to check if an account exists
+ipcMain.handle('check-account-exists', (event, publicKey) => {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT 1 FROM account WHERE publicKey = ? LIMIT 1`, [publicKey], function (err, row) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row ? true : false); // returns true if account exists, otherwise false
+      }
+    });
+  });
+});
+
 // Handle IPC call for adding an account
 ipcMain.handle('add-account', async (event, publicKey) => {
   return new Promise((resolve, reject) => {
