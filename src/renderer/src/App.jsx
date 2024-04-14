@@ -9,7 +9,7 @@ function App() {
 				<Routes>
 					<Route path="/" exact element={<Account />} />
 					<Route path="/account-details/:publicKey" element={<AccountDetails />} />
-					{/* <Route path="/account-details/:accountId/transaction/:transactionId" element={<AccountDetails />} /> */}
+					<Route path="/account-details/:publicKey/transaction/:transactionId" element={<AccountDetails />} />
 				</Routes>
 			</Router>
     </>
