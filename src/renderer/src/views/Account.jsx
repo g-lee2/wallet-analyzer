@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Account() {
+  const navigate = useNavigate();
   // State to store the input value for public key
   const [publicKey, setPublicKey] = useState('');
   // State to store the list of accounts fetched from the database
@@ -8,7 +10,19 @@ function Account() {
 
   // Function to handle adding a user when the button is clicked
   const handleAddAccount = async () => {
-    await window.electron.addAccount(publicKey);  // Call the addAccount function exposed by preload.js
+    try {
+      const accountExists = await window.electron.checkAccountExists(publicKey);
+      if (!accountExists) {
+        // Call the addAccount function exposed by preload.js
+          await window.electron.addAccount(publicKey);
+          navigate(`/account-details/${publicKey}`);
+      } else {
+          console.log("Account already exists.");
+          navigate(`/account-details/${publicKey}`);
+      }
+  } catch (error) {
+      console.error("Error in IPC call:", error);
+  }
     setPublicKey("");  // Reset the input field
     await fetchAccounts();  // Refetch the list of accounts to update the UI
   };
@@ -21,25 +35,23 @@ function Account() {
 
   // useEffect to fetch accounts when the component mounts
   useEffect(() => {
-    fetchAccounts();  // Fetch accounts initially and refresh list each time component is mounted
+    fetchAccounts();  
   }, []);
 
   return (
     <div>
       <input
         type="text"
-        value={publicKey}  // Bind input value to publicKey state
-        onChange={(e) => setPublicKey(e.target.value)}  // Update state when input changes
-        placeholder="Enter Public Key"  // Placeholder for the input
+        value={publicKey}
+        onChange={(e) => setPublicKey(e.target.value)}
+        placeholder="Enter Public Key"
       />
-      {/* Button to trigger addUser */}
       <button onClick={handleAddAccount}>Search Account</button>  
       <div>
-        {/* Section heading for user list */}
         <h2>Account List</h2>  
         <ul>
-          {accounts.map(account => (  // Map over the accounts array to render list items
-            <li key={account.id}>{account.publicKey} - Total: {account.totalProfit}</li>  // Display public key and total profit
+          {accounts.map(account => (  
+            <button key={account.id} onClick={() => setPublicKey(account.publicKey)}>{account.publicKey} - Total: {account.totalProfit} </button> 
           ))}
         </ul>
       </div>
@@ -47,4 +59,4 @@ function Account() {
   );
 }
 
-export default Account;  // Export the Account component
+export default Account;

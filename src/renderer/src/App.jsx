@@ -1,25 +1,15 @@
 import Account from "./views/Account";
 import AccountDetails from "./views/AccountDetails";
-import Layout from "./views/Layout";
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 function App() {
-  // const ipcHandle = () => window.electron.ipcRenderer.send('ping')
-
   return (
     <>
       <Router>
 				<Routes>
-					<Route path="/" element={<Layout />}>
-						<Route
-              path="/account"
-							element={ <Account />}
-						/>
-						<Route
-							path="/account-details"
-							element={<AccountDetails />}
-						/>
-					</Route>
+					<Route path="/" exact element={<Account />} />
+					<Route path="/account-details/:publicKey" element={<AccountDetails />} />
+					{/* <Route path="/account-details/:accountId/transaction/:transactionId" element={<AccountDetails />} /> */}
 				</Routes>
 			</Router>
     </>
@@ -27,5 +17,3 @@ function App() {
 }
 
 export default App;
-
-
