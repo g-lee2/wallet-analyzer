@@ -35,25 +35,23 @@ function Account() {
 
   // useEffect to fetch accounts when the component mounts
   useEffect(() => {
-    fetchAccounts();  // Fetch accounts initially and refresh list each time component is mounted
+    fetchAccounts();  
   }, []);
 
   return (
     <div>
       <input
         type="text"
-        value={publicKey}  // Bind input value to publicKey state
-        onChange={(e) => setPublicKey(e.target.value)}  // Update state when input changes
-        placeholder="Enter Public Key"  // Placeholder for the input
+        value={publicKey}
+        onChange={(e) => setPublicKey(e.target.value)}
+        placeholder="Enter Public Key"
       />
-      {/* Button to trigger addUser */}
       <button onClick={handleAddAccount}>Search Account</button>  
       <div>
-        {/* Section heading for user list */}
         <h2>Account List</h2>  
         <ul>
-          {accounts.map(account => (  // Map over the accounts array to render list items
-            <button key={account.id} onClick={() => setPublicKey(account.publicKey)}>{account.publicKey} - Total: {account.totalProfit} </button>  // Display public key and total profit
+          {accounts.map(account => (  
+            <button key={account.id} onClick={() => setPublicKey(account.publicKey)}>{account.publicKey} - Total: {account.totalProfit} </button> 
           ))}
         </ul>
       </div>
@@ -61,4 +59,4 @@ function Account() {
   );
 }
 
-export default Account;  // Export the Account component
+export default Account;

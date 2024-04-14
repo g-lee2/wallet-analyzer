@@ -16,14 +16,14 @@ export default function AccountDetails() {
   };
 
   const fetchTransactions = async () => {
-    const fetchedTransactions = await window.electron.getTransactions(publicKey);  // Call the getAccountTotalProfit function exposed by preload.js
-    setTransactions(fetchedTransactions);  // Update the accounts state with the fetched account's total profit
+    const fetchedTransactions = await window.electron.getTransactions(publicKey);  // Call the getTransactions function exposed by preload.js
+    setTransactions(fetchedTransactions);  // Update the transaction state with the fetched transactions
   };
 
-  // useEffect to fetch account's totalProfit when the component mounts
+  // useEffect to fetch account's totalProfit and transactions when the component mounts
   useEffect(() => {
-    fetchAccountInfo();  // Fetch accounts initially and refresh list each time component is mounted
-    fetchTransactions();
+    fetchAccountInfo(); 
+    fetchTransactions(); 
   }, []);
 
   // Function to handle adding a transaction when the button is clicked
