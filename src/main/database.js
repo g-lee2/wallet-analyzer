@@ -35,6 +35,17 @@ db.serialize(() => {
     profit DECIMAL,
     FOREIGN KEY (publicKey) REFERENCES account (publicKey)
   )`);
+
+  // Create the 'transaction_detail' table if it doesn't already exist
+  db.run(`CREATE TABLE IF NOT EXISTS transaction_detail (
+    transactionDetailId INTEGER PRIMARY KEY AUTOINCREMENT,
+    transactionId INTEGER, 
+    transactionHash TEXT,
+    transactionDetail TEXT,
+    time DATETIME,
+    tip DECIMAL,
+    FOREIGN KEY (transactionId) REFERENCES account_transactions (transactionId)
+  )`);
 });
 
 // Define a function to check if the user exists
@@ -131,6 +142,45 @@ function getTransactions(publicKey) {
   });
 }
 
+// Define a function to add an account to the 'transaction_detail' table
+function addTransactionDetail(transactionId, transactionHash, transactionDetail, time, tip) {
+  return new Promise((resolve, reject) => {
+    // Prepare an SQL statement for inserting data into the 'transaction_detail' table
+    const stmt = db.prepare(
+      `INSERT INTO transaction_detail (transactionId, transactionHash, transactionDetail, time, tip) VALUES (?, ?, ?, ?, ?)`
+    );
+
+    // Run the prepared SQL statement with the provided transactionId, transactionHash, transactionDetail, time, and tip
+    stmt.run(transactionId, transactionHash, transactionDetail, time, tip, function (err) {
+      if (err) {
+        reject(err.message); // If an error occurs, reject the promise with the error message
+      } else {
+        resolve(`A row has been inserted with rowid ${this.lastID}`); // Otherwise, resolve the promise with the rowid of the inserted row
+      }
+    });
+
+    // Finalize the statement to release resources associated with it
+    stmt.finalize();
+  });
+}
+
+// Define a function to retrieve all transaction details from the 'transaction_detail' table
+function getTransactionDetails(transactionId) {
+  return new Promise((resolve, reject) => {
+    // Execute an SQL query to select all columns from the 'transaction_detail' table
+    db.all(
+      `SELECT * FROM transaction_detail WHERE transactionId = ?`,
+      [transactionId],
+      (err, rows) => {
+        if (err) {
+          reject(err.message); // If an error occurs during the query, reject the promise with the error message
+        }
+        resolve(rows); // If the query is successful, resolve the promise with the rows of transactions
+      }
+    );
+  });
+}
+
 // Export the all add, get, update, check account functions so they can be used elsewhere in the project
 module.exports = {
   checkAccountExists,
@@ -138,5 +188,7 @@ module.exports = {
   getAccounts,
   addTransaction,
   getTransactions,
-  getAccountTotalProfit
+  getAccountTotalProfit,
+  addTransactionDetail,
+  getTransactionDetails
 };

@@ -27,6 +27,16 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
       profit DECIMAL,
       FOREIGN KEY (publicKey) REFERENCES account (publicKey)
     )`);
+    // Create the 'transaction_detail' table if it doesn't already exist
+    db.run(`CREATE TABLE IF NOT EXISTS transaction_detail (
+      transactionDetailId INTEGER PRIMARY KEY AUTOINCREMENT,
+      transactionId INTEGER, 
+      transactionHash TEXT,
+      transactionDetail TEXT,
+      time DATETIME,
+      tip DECIMAL,
+      FOREIGN KEY (transactionId) REFERENCES account_transactions (transactionId)
+    )`);
   }
 });
 
@@ -115,6 +125,46 @@ ipcMain.handle('get-transactions', async (event, publicKey) => {
         resolve(rows);
       }
     });
+  });
+});
+
+// Handle IPC call for adding transaction details
+ipcMain.handle(
+  'add-transaction-detail',
+  async (event, transactionId, transactionHash, transactionDetail, time, tip) => {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO transaction_detail (transactionId, transactionHash, transactionDetail, time, tip) VALUES (?, ?, ?, ?, ?)`,
+        [transactionId, transactionHash, transactionDetail, time, tip],
+        function (err) {
+          if (err) {
+            console.error('Failed to add transaction detail', err);
+            reject(new Error('Error adding transaction detail'));
+          } else {
+            console.log(`A row has been inserted with rowid ${this.lastID}`);
+            resolve(`Transaction detail added with ID ${this.lastID}`);
+          }
+        }
+      );
+    });
+  }
+);
+
+// Handle IPC call for retrieving all transaction details
+ipcMain.handle('get-transaction-details', async (event, transactionId) => {
+  return new Promise((resolve, reject) => {
+    db.all(
+      `SELECT * FROM transaction_detail WHERE transactionId = ?`,
+      [transactionId],
+      (err, rows) => {
+        if (err) {
+          console.error('Failed to retrieve transaction details', err);
+          reject(new Error('Failed to retrieve transaction details'));
+        } else {
+          resolve(rows);
+        }
+      }
+    );
   });
 });
 
