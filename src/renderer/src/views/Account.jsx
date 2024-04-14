@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Account() {
+  const navigate = useNavigate();
   // State to store the input value for public key
   const [publicKey, setPublicKey] = useState('');
   // State to store the list of accounts fetched from the database
@@ -13,8 +15,10 @@ function Account() {
       if (!accountExists) {
         // Call the addAccount function exposed by preload.js
           await window.electron.addAccount(publicKey);
+          navigate(`/account-details/${publicKey}`);
       } else {
           console.log("Account already exists.");
+          navigate(`/account-details/${publicKey}`);
       }
   } catch (error) {
       console.error("Error in IPC call:", error);
