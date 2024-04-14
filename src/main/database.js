@@ -83,6 +83,19 @@ function getAccounts() {
   });
 }
 
+// Define a function to retrieve a certain account's totalProfit from the 'account' table
+function getAccountTotalProfit(publicKey) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT totalProfit FROM account WHERE publicKey = ?', [publicKey], (err, row) => {
+      if (err) {
+        reject(new Error('Failed to retrieve account from the database: ' + err.message));
+      } else {
+        resolve(row);
+      }
+    });
+  });
+}
+
 // Define a function to add a transaction to the 'account_transactions' table
 function addTransaction(publicKey, ticker, cost, profit) {
   return new Promise((resolve, reject) => {
@@ -123,4 +136,11 @@ function getTransactions() {
 }
 
 // Export the all add, get, update, check account functions so they can be used elsewhere in the project
-module.exports = { checkAccountExists, addAccount, getAccounts, addTransaction, getTransactions };
+module.exports = {
+  checkAccountExists,
+  addAccount,
+  getAccounts,
+  addTransaction,
+  getTransactions,
+  getAccountTotalProfit
+};

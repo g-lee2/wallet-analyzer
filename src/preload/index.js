@@ -13,6 +13,10 @@ const api = {
   // This function does not need to send any additional data
   getAccounts: () => ipcRenderer.invoke('get-accounts'),
 
+  // Function to retrieve a certain account. It sends a message to the main process to invoke the 'get-account-by-public-key' channel
+  // `publicKey` is the argument passed which will be used by the main process to return a certain account into the database
+  getAccountTotalProfit: (publicKey) => ipcRenderer.invoke('get-account-total-profit', publicKey),
+
   // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transaction' channel
   // `publicKey, ticker, cost, profit` is the argument passed which will be used by the main process to add a transaction into the database
   addTransaction: () => ipcRenderer.invoke('add-transaction', publicKey, ticker, cost, profit),
@@ -29,6 +33,8 @@ contextBridge.exposeInMainWorld('electron', {
   checkAccountExists: api.checkAccountExists, // Exposing the checkAccountExists function
   addAccount: api.addAccount, // Exposing the addAccunt function
   getAccounts: api.getAccounts, // Exposing the getAccounts function
+  getAccountTotalProfit: api.getAccountTotalProfit,
+  // Exposing the getAccountTotalProfit function
   addTransaction: api.addTransaction, // Exposing the addTransaction function
   getTransactions: api.getTransactions // Exposing the getTransactions function
 });

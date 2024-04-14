@@ -72,6 +72,20 @@ ipcMain.handle('get-accounts', async (event) => {
   });
 });
 
+// Handle IPC call for retrieving a certain account's total profit
+ipcMain.handle('get-account-total-profit', async (event, publicKey) => {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT totalProfit FROM account WHERE publicKey = ?', [publicKey], (err, row) => {
+      if (err) {
+        reject(new Error('Failed to retrieve account from the database: ' + err.message));
+      } else {
+        resolve(row);
+        console.log('Database row:', row);
+      }
+    });
+  });
+});
+
 // Handle IPC call for adding a transaction
 ipcMain.handle('add-transaction', async (event, publicKey, ticker, cost, profit) => {
   return new Promise((resolve, reject) => {
