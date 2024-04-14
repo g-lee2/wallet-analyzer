@@ -29,7 +29,7 @@ db.serialize(() => {
   // Create the 'account_transactions' table if it doesn't already exist
   db.run(`CREATE TABLE IF NOT EXISTS account_transactions (
     transactionId INTEGER PRIMARY KEY AUTOINCREMENT, 
-    publicKey TEXT,
+    publicKey TEXT, 
     ticker TEXT,
     cost DECIMAL,
     profit DECIMAL,
@@ -119,19 +119,15 @@ function addTransaction(publicKey, ticker, cost, profit) {
 }
 
 // Define a function to retrieve all transactions from the 'account_transactions' table
-function getTransactions() {
+function getTransactions(publicKey) {
   return new Promise((resolve, reject) => {
     // Execute an SQL query to select all columns from the 'account_transactions' table
-    db.all(
-      `SELECT transactionId, publicKey, ticker, cost, profit FROM account_transactions`,
-      [],
-      (err, rows) => {
-        if (err) {
-          reject(err.message); // If an error occurs during the query, reject the promise with the error message
-        }
-        resolve(rows); // If the query is successful, resolve the promise with the rows of transactions
+    db.all(`SELECT * FROM account_transactions WHERE publicKey = ?`, [publicKey], (err, rows) => {
+      if (err) {
+        reject(err.message); // If an error occurs during the query, reject the promise with the error message
       }
-    );
+      resolve(rows); // If the query is successful, resolve the promise with the rows of transactions
+    });
   });
 }
 

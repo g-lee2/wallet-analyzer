@@ -80,7 +80,6 @@ ipcMain.handle('get-account-total-profit', async (event, publicKey) => {
         reject(new Error('Failed to retrieve account from the database: ' + err.message));
       } else {
         resolve(row);
-        console.log('Database row:', row);
       }
     });
   });
@@ -106,20 +105,16 @@ ipcMain.handle('add-transaction', async (event, publicKey, ticker, cost, profit)
 });
 
 // Handle IPC call for retrieving all transactions
-ipcMain.handle('get-transactions', async (event) => {
+ipcMain.handle('get-transactions', async (event, publicKey) => {
   return new Promise((resolve, reject) => {
-    db.all(
-      'SELECT transactionId, publicKey, ticker, cost, profit FROM account_transactions',
-      [],
-      (err, rows) => {
-        if (err) {
-          console.error('Failed to retrieve transactions', err);
-          reject(new Error('Failed to retrieve transactions'));
-        } else {
-          resolve(rows);
-        }
+    db.all(`SELECT * FROM account_transactions WHERE publicKey = ?`, [publicKey], (err, rows) => {
+      if (err) {
+        console.error('Failed to retrieve transactions', err);
+        reject(new Error('Failed to retrieve transactions'));
+      } else {
+        resolve(rows);
       }
-    );
+    });
   });
 });
 

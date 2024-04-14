@@ -19,11 +19,11 @@ const api = {
 
   // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transaction' channel
   // `publicKey, ticker, cost, profit` is the argument passed which will be used by the main process to add a transaction into the database
-  addTransaction: () => ipcRenderer.invoke('add-transaction', publicKey, ticker, cost, profit),
+  addTransaction: (publicKey, ticker, cost, profit) =>
+    ipcRenderer.invoke('add-transaction', publicKey, ticker, cost, profit),
 
   // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transactions' channel
-  // This function does not need to send any additional data
-  getTransactions: () => ipcRenderer.invoke('get-transactions')
+  getTransactions: (publicKey) => ipcRenderer.invoke('get-transactions', publicKey)
 };
 
 // Using contextBridge to expose the defined API object to the renderer process under the global
