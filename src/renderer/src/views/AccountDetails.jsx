@@ -1,8 +1,9 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 export default function AccountDetails() {
   let {publicKey} = useParams();
+  const navigate = useNavigate();
   const [accountTotalProfit, setAccountTotalProfit] = useState();
   const [ticker, setTicker] = useState('');
   const [cost, setCost] = useState(0);
@@ -35,6 +36,10 @@ export default function AccountDetails() {
     await fetchTransactions(publicKey);
   };
 
+  const handleOnClick = (transactionId) => {
+    navigate(`/account-details/${publicKey}/transaction/${transactionId}`);
+  }
+
   return (
     <>
       <span>Account Details page</span>
@@ -62,7 +67,12 @@ export default function AccountDetails() {
       <button onClick={handleAddTransaction}>Add Transaction</button>  
       <ul>
           {transactions.map(transaction => ( 
-            <button key={transaction.transactionId}>{transaction.ticker} - Cost: {transaction.cost} - Profit: {transaction.profit} </button>
+            <button 
+              key={transaction.transactionId} 
+              onClick={() => handleOnClick(transaction.transactionId)}
+            >
+              {transaction.ticker} - Cost: {transaction.cost} - Profit: {transaction.profit} 
+            </button>
           ))}
         </ul>
     </>
