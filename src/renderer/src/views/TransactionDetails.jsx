@@ -6,7 +6,6 @@ export default function TransactionDetails() {
   const [transactionHash, setTransactionHash] = useState('');
   const [transactionDetail, setTransactionDetail] = useState('');
   const [time, setTime] = useState('');
-  const [tip, setTip] = useState(0);
   const [transactionDetailList, setTransactionDetailList] = useState([]);
 
   const fetchTransactionDetailList = async () => {
@@ -25,7 +24,6 @@ export default function TransactionDetails() {
     setTransactionHash("");
     setTransactionDetail("");
     setTime("");
-    setTip("")
     await fetchTransactionDetailList(transactionId);
   };
 
@@ -52,19 +50,13 @@ export default function TransactionDetails() {
         onChange={(e) => setTime(e.target.value)}  
         placeholder="Enter Time"  
       />
-      <input
-        type="number"
-        value={tip}  
-        onChange={(e) => setTip(e.target.value)}  
-        placeholder="Enter Tip"  
-      />
       <button onClick={handleAddTransactionDetail}>Add Transaction Detail</button>
       <ul>
         {transactionDetailList.map(transactionDetail => ( 
           <button 
             key={transactionDetail.transactionDetailId} 
           >
-            {transactionDetail.setTransactionHash} - Detail: {transactionDetail.transactionDetail} - Time: {transactionDetail.time} - Tip: {transactionDetail.tip}
+            Detail: {transactionDetail.transactionDetail} - Time: {transactionDetail.time}
           </button>
         ))}
       </ul>

@@ -34,7 +34,6 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
       transactionHash TEXT,
       transactionDetail TEXT,
       time DATETIME,
-      tip DECIMAL,
       FOREIGN KEY (transactionId) REFERENCES account_transactions (transactionId)
     )`);
   }
@@ -131,11 +130,11 @@ ipcMain.handle('get-transactions', async (event, publicKey) => {
 // Handle IPC call for adding transaction details
 ipcMain.handle(
   'add-transaction-detail',
-  async (event, transactionId, transactionHash, transactionDetail, time, tip) => {
+  async (event, transactionId, transactionHash, transactionDetail, time) => {
     return new Promise((resolve, reject) => {
       db.run(
-        `INSERT INTO transaction_detail (transactionId, transactionHash, transactionDetail, time, tip) VALUES (?, ?, ?, ?, ?)`,
-        [transactionId, transactionHash, transactionDetail, time, tip],
+        `INSERT INTO transaction_detail (transactionId, transactionHash, transactionDetail, time) VALUES (?, ?, ?, ?, ?)`,
+        [transactionId, transactionHash, transactionDetail, time],
         function (err) {
           if (err) {
             console.error('Failed to add transaction detail', err);

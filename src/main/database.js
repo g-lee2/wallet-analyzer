@@ -43,7 +43,6 @@ db.serialize(() => {
     transactionHash TEXT,
     transactionDetail TEXT,
     time DATETIME,
-    tip DECIMAL,
     FOREIGN KEY (transactionId) REFERENCES account_transactions (transactionId)
   )`);
 });
@@ -143,15 +142,15 @@ function getTransactions(publicKey) {
 }
 
 // Define a function to add an account to the 'transaction_detail' table
-function addTransactionDetail(transactionId, transactionHash, transactionDetail, time, tip) {
+function addTransactionDetail(transactionId, transactionHash, transactionDetail, time) {
   return new Promise((resolve, reject) => {
     // Prepare an SQL statement for inserting data into the 'transaction_detail' table
     const stmt = db.prepare(
-      `INSERT INTO transaction_detail (transactionId, transactionHash, transactionDetail, time, tip) VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO transaction_detail (transactionId, transactionHash, transactionDetail, time) VALUES (?, ?, ?, ?, ?)`
     );
 
     // Run the prepared SQL statement with the provided transactionId, transactionHash, transactionDetail, time, and tip
-    stmt.run(transactionId, transactionHash, transactionDetail, time, tip, function (err) {
+    stmt.run(transactionId, transactionHash, transactionDetail, time, function (err) {
       if (err) {
         reject(err.message); // If an error occurs, reject the promise with the error message
       } else {
