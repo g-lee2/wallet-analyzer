@@ -56,7 +56,7 @@ export default function TransactionDetails() {
           <button 
             key={transactionDetail.transactionDetailId} 
           >
-            Detail: {transactionDetail.transactionDetail} - Time: {transactionDetail.time}
+            Transaction Hash: {transactionDetail.transactionHash} - Detail: {transactionDetail.transactionDetail} - Time: {transactionDetail.time}
           </button>
         ))}
       </ul>
