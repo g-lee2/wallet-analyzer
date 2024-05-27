@@ -17,30 +17,20 @@ const api = {
   // `publicKey` is the argument passed which will be used by the main process to return a certain account into the database
   getAccountTotalProfit: (publicKey) => ipcRenderer.invoke('get-account-total-profit', publicKey),
 
+  getTransactionId: (tokenId) => ipcRenderer.invoke('get-transaction-id', tokenId),
+
   // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transaction' channel
-  // `publicKey, ticker, cost, profit` is the argument passed which will be used by the main process to add a transaction into the database
-  addTransaction: (publicKey, ticker, cost, profit) =>
-    ipcRenderer.invoke('add-transaction', publicKey, ticker, cost, profit),
+  addTransaction: (rows) => ipcRenderer.invoke('add-transaction', rows),
 
   // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transactions' channel
   // `publicKey` is the argument passed which will be used by the main process to return a certain account into the database
   getTransactions: (publicKey) => ipcRenderer.invoke('get-transactions', publicKey),
 
   // Function to retrieve transaction details. It sends a message to the main process to invoke the 'add-transaction-detail' channel
-  // `publicKey, ticker, cost, profit` is the argument passed which will be used by the main process to add a transaction detail into the database
-  addTransactionDetail: (transactionId, transactionHash, transactionDetail, time) =>
-    ipcRenderer.invoke(
-      'add-transaction-detail',
-      transactionId,
-      transactionHash,
-      transactionDetail,
-      time
-    ),
-
+  addTransactionDetail: (rows) => ipcRenderer.invoke('add-transaction-detail', rows),
   // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transaction-details' channel
   // `transactionId` is the argument passed which will be used by the main process to return a certain transaction's details into the database
-  getTransactionDetails: (transactionId) =>
-    ipcRenderer.invoke('get-transaction-details', transactionId)
+  getTransactionDetails: (tokenId) => ipcRenderer.invoke('get-transaction-details', tokenId)
 };
 
 // Using contextBridge to expose the defined API object to the renderer process under the global
@@ -51,7 +41,7 @@ contextBridge.exposeInMainWorld('electron', {
   addAccount: api.addAccount, // Exposing the addAccunt function
   getAccounts: api.getAccounts, // Exposing the getAccounts function
   getAccountTotalProfit: api.getAccountTotalProfit,
-  // Exposing the getAccountTotalProfit function
+  getTransactionId: api.getTransactionId,
   addTransaction: api.addTransaction, // Exposing the addTransaction function
   getTransactions: api.getTransactions, // Exposing the getTransactions function
   addTransactionDetail: api.addTransactionDetail, // Exposing the addTransactionDetail function

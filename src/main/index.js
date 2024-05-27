@@ -15,26 +15,30 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
     // Create an account table if it doesn't exist
     db.run(`CREATE TABLE IF NOT EXISTS account (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      publicKey TEXT UNIQUE,
-      totalProfit INTEGER DEFAULT 0
+      publicKey TEXT,
+      totalProfit DOUBLE  
     )`);
     // Create an account_transactions table if it doesn't exist
     db.run(`CREATE TABLE IF NOT EXISTS account_transactions (
       transactionId INTEGER PRIMARY KEY AUTOINCREMENT, 
-      publicKey TEXT,
+      publicKey TEXT, 
+      tokenId TEXT UNIQUE,
       ticker TEXT,
-      cost DECIMAL,
-      profit DECIMAL,
+      cost DOUBLE,
+      profit DOUBLE,
       FOREIGN KEY (publicKey) REFERENCES account (publicKey)
     )`);
     // Create the 'transaction_detail' table if it doesn't already exist
     db.run(`CREATE TABLE IF NOT EXISTS transaction_detail (
       transactionDetailId INTEGER PRIMARY KEY AUTOINCREMENT,
-      transactionId INTEGER, 
+      tokenId TEXT, 
       transactionHash TEXT,
-      transactionDetail TEXT,
+      fromToken TEXT,
+      fromAmount DOUBLE,
+      toToken TEXT,
+      toAmount DOUBLE,
       time DATETIME,
-      FOREIGN KEY (transactionId) REFERENCES account_transactions (transactionId)
+      FOREIGN KEY (tokenId) REFERENCES account_transactions (tokenId)
     )`);
   }
 });
@@ -94,22 +98,83 @@ ipcMain.handle('get-account-total-profit', async (event, publicKey) => {
   });
 });
 
-// Handle IPC call for adding a transaction
-ipcMain.handle('add-transaction', async (event, publicKey, ticker, cost, profit) => {
+ipcMain.handle('get-transaction-id', async (event, tokenId) => {
   return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO account_transactions (publicKey, ticker, cost, profit) VALUES (?, ?, ?, ?)`,
-      [publicKey, ticker, cost, profit],
-      function (err) {
+    db.get(
+      'SELECT transactionId FROM account_transactions WHERE tokenId = ?',
+      [tokenId],
+      (err, row) => {
         if (err) {
-          console.error('Failed to add transaction', err);
-          reject(new Error('Error adding transaction'));
+          reject(new Error('Failed to retrieve account from the database: ' + err.message));
         } else {
-          console.log(`A row has been inserted with rowid ${this.lastID}`);
-          resolve(`Transaction added with ID ${this.lastID}`);
+          resolve(row);
         }
       }
     );
+  });
+});
+
+// ipcMain.handle('add-transaction', (event, rows) => {
+//   return new Promise((resolve, reject) => {
+//     db.serialize(() => {
+//       db.run('BEGIN TRANSACTION');
+//       const stmt = db.prepare(
+//         `INSERT INTO account_transactions (publicKey, tokenId, ticker, cost, profit) VALUES (?, ?, ?, ?, ?)`
+//       );
+
+//       rows.forEach((row) => {
+//         stmt.run([row.publicKey, row.tokenId, row.ticker, row.cost, row.profit], function (err) {
+//           if (err) {
+//             reject(err.message); // This will stop and reject the first error encountered
+//             return;
+//           }
+//         });
+//       });
+
+//       db.run('COMMIT TRANSACTION', (err) => {
+//         if (err) {
+//           reject(err.message); // Handle commit errors
+//         } else {
+//           stmt.finalize(); // Make sure to finalize the statement
+//           console.log(`A row has been inserted with rowid`);
+//           resolve('All rows have been inserted successfully');
+//         }
+//       });
+//     });
+//   });
+// });
+
+ipcMain.handle('add-transaction', async (event, rows) => {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run('BEGIN'); // Start transaction
+
+      rows.forEach((row) => {
+        db.run(
+          `INSERT INTO account_transactions (publicKey, tokenId, ticker, cost, profit) VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(tokenId) DO UPDATE SET
+            cost = cost + EXCLUDED.cost,
+            profit = profit + EXCLUDED.profit`,
+          [row.publicKey, row.tokenId, row.ticker, row.cost, row.profit],
+          (err) => {
+            if (err) {
+              db.run('ROLLBACK'); // Roll back on error
+              reject(err);
+              return;
+            }
+          }
+        );
+      });
+
+      db.run('COMMIT', (err) => {
+        // Commit all changes
+        if (err) {
+          reject('Failed to commit transaction: ' + err.message);
+        } else {
+          resolve('All user data updated successfully.');
+        }
+      });
+    });
   });
 });
 
@@ -127,43 +192,62 @@ ipcMain.handle('get-transactions', async (event, publicKey) => {
   });
 });
 
-// Handle IPC call for adding transaction details
-ipcMain.handle(
-  'add-transaction-detail',
-  async (event, transactionId, transactionHash, transactionDetail, time) => {
-    return new Promise((resolve, reject) => {
-      db.run(
-        `INSERT INTO transaction_detail (transactionId, transactionHash, transactionDetail, time) VALUES (?, ?, ?, ?, ?)`,
-        [transactionId, transactionHash, transactionDetail, time],
-        function (err) {
-          if (err) {
-            console.error('Failed to add transaction detail', err);
-            reject(new Error('Error adding transaction detail'));
-          } else {
-            console.log(`A row has been inserted with rowid ${this.lastID}`);
-            resolve(`Transaction detail added with ID ${this.lastID}`);
+ipcMain.handle('add-transaction-detail', (event, rows) => {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run('BEGIN TRANSACTION DETAIL');
+      const stmt = db.prepare(`INSERT INTO transaction_detail (tokenId, 
+        transactionHash,
+        fromToken,
+        fromAmount,
+        toToken,
+        toAmount,
+        time) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+
+      rows.forEach((row) => {
+        stmt.run(
+          [
+            row.tokenId,
+            row.transactionHash,
+            row.fromToken,
+            row.fromAmount,
+            row.toToken,
+            row.toAmount,
+            row.time
+          ],
+          function (err) {
+            if (err) {
+              reject(err.message); // This will stop and reject the first error encountered
+              return;
+            }
           }
+        );
+      });
+
+      db.run('COMMIT TRANSACTION DETAIL', (err) => {
+        if (err) {
+          reject(err.message); // Handle commit errors
+        } else {
+          stmt.finalize(); // Make sure to finalize the statement
+          console.log(`A row has been inserted with rowid`);
+          resolve('All rows have been inserted successfully');
         }
-      );
+      });
     });
-  }
-);
+  });
+});
 
 // Handle IPC call for retrieving all transaction details
-ipcMain.handle('get-transaction-details', async (event, transactionId) => {
+ipcMain.handle('get-transaction-details', async (event, tokenId) => {
   return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT * FROM transaction_detail WHERE transactionId = ?`,
-      [transactionId],
-      (err, rows) => {
-        if (err) {
-          console.error('Failed to retrieve transaction details', err);
-          reject(new Error('Failed to retrieve transaction details'));
-        } else {
-          resolve(rows);
-        }
+    db.all(`SELECT * FROM transaction_detail WHERE tokenId = ?`, [tokenId], (err, rows) => {
+      if (err) {
+        console.error('Failed to retrieve transaction details', err);
+        reject(new Error('Failed to retrieve transaction details'));
+      } else {
+        resolve(rows);
       }
-    );
+    });
   });
 });
 
