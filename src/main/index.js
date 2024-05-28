@@ -23,7 +23,8 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
       transactionId INTEGER PRIMARY KEY AUTOINCREMENT, 
       publicKey TEXT, 
       tokenId TEXT UNIQUE,
-      ticker TEXT,
+      tokenName TEXT,
+      tokenSymbol TEXT,
       cost DOUBLE,
       profit DOUBLE,
       FOREIGN KEY (publicKey) REFERENCES account (publicKey)
@@ -32,6 +33,8 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
     db.run(`CREATE TABLE IF NOT EXISTS transaction_detail (
       transactionDetailId INTEGER PRIMARY KEY AUTOINCREMENT,
       tokenId TEXT, 
+      tokenName TEXT,
+      tokenSymbol TEXT,
       transactionHash TEXT UNIQUE,
       fromToken TEXT,
       fromAmount DOUBLE,
@@ -315,6 +318,46 @@ ipcMain.handle('check-if-transaction-detail-exists', async (event, rows) => {
   }
 
   return notFoundRows;
+});
+
+ipcMain.handle('update-token-name-symbol', async (event, tokenId, tokenName, tokenSymbol) => {
+  try {
+    // Step 1: Update prop1 and prop2 in table1
+    await new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE account_transactions SET tokenName = ?, tokenSymbol = ? WHERE tokenId = ?',
+        [tokenName, tokenSymbol, tokenId],
+        function (err) {
+          if (err) {
+            reject('Error updating account_transactions: ' + err.message);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+
+    // Step 2: Update prop1 and prop2 in table2
+    await new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE transaction_detail SET tokenName = ?, tokenSymbol = ? WHERE tokenId = ?',
+        [tokenName, tokenSymbol, tokenId],
+        function (err) {
+          if (err) {
+            reject('Error updating transaction_detail: ' + err.message);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+
+    console.log(`Successfully updated tokenName and tokenSymbol for tokenId: ${tokenId}`);
+    return 'Success';
+  } catch (error) {
+    console.error(error);
+    return { error: 'Error processing the request: ' + error.message };
+  }
 });
 
 // Function to create the main window of the Electron app

@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react"; 
 import data from './data.json';
+import tokenData from './getAsset.json';
 
 export default function AccountDetails() {
   let {publicKey} = useParams();
@@ -71,6 +72,12 @@ export default function AccountDetails() {
     await setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
   };
 
+  const handleGetTokenName = async (tokenId) => {
+    const tokenName = tokenData.content.metadata.name;
+    const tokensymbol = tokenData.content.metadata.symbol;
+    await window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
+  };
+
   const prepareForDb = (transaction) => {
     if (!transaction) {
       return;
@@ -139,12 +146,15 @@ export default function AccountDetails() {
       <button onClick={handleGetTransactions}>Get Transactions</button>  
       <ul>
           {transactions.map(transaction => ( 
-            <button 
-              key={transaction.transactionId} 
-              onClick={() => handleOnClick(transaction.tokenId)}
-            >
-              {transaction.tokenId} - Cost: {transaction.cost} - Profit: {transaction.profit} 
-            </button>
+            <>
+              <button 
+                key={transaction.transactionId} 
+                onClick={() => handleOnClick(transaction.tokenId)}
+              >
+                {transaction.tokenId} - Cost: {transaction.cost} - Profit: {transaction.profit} 
+              </button>
+              <button onClick={() => handleGetTokenName(transaction.tokenId)}>Get Token Name</button> 
+            </> 
           ))}
         </ul>
     </>

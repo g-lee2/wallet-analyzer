@@ -36,7 +36,10 @@ const api = {
   getTransactionDetails: (tokenId) => ipcRenderer.invoke('get-transaction-details', tokenId),
 
   checkIfTransactionDetailExists: (rows) =>
-    ipcRenderer.invoke('check-if-transaction-detail-exists', rows)
+    ipcRenderer.invoke('check-if-transaction-detail-exists', rows),
+
+  updateTokenNameSymbol: (tokenId, tokenName, tokenSymbol) =>
+    ipcRenderer.invoke('update-token-name-symbol', tokenId, tokenName, tokenSymbol)
 };
 
 // Using contextBridge to expose the defined API object to the renderer process under the global
@@ -53,5 +56,6 @@ contextBridge.exposeInMainWorld('electron', {
   getTransactions: api.getTransactions, // Exposing the getTransactions function
   addTransactionDetail: api.addTransactionDetail, // Exposing the addTransactionDetail function
   getTransactionDetails: api.getTransactionDetails, // Exposing the getTransactionDetails function
-  checkIfTransactionDetailExists: api.checkIfTransactionDetailExists
+  checkIfTransactionDetailExists: api.checkIfTransactionDetailExists,
+  updateTokenNameSymbol: api.updateTokenNameSymbol
 });
