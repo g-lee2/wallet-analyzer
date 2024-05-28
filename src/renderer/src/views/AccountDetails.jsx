@@ -8,6 +8,7 @@ export default function AccountDetails() {
   const [accountTotalProfit, setAccountTotalProfit] = useState();
   const [transactions, setTransactions] = useState([]);
   const [transactionUpdateAfterApi, setTransactionUpdateAfterApi] = useState([]);
+  const [preTransactionDetailUpdate, setPreTransactionDetailUpdate] = useState([]);
   const [transactionDetailUpdate, setTransactionDetailUpdate] = useState([]);
   const [transactionsFromApi, setTransactionsFromApi] = useState([]);
 
@@ -41,6 +42,7 @@ export default function AccountDetails() {
 
   // Function to fetch an account's totalProfit from the database
   const fetchAccountInfo = async () => {
+    await window.electron.sumAndUpdateTotalProfit(publicKey);
     const fetchedAccount = await window.electron.getAccountTotalProfit(publicKey);  // Call the getAccountTotalProfit function exposed by preload.js
     setAccountTotalProfit(fetchedAccount);  // Update the accounts state with the fetched account's total profit
   };
@@ -52,7 +54,7 @@ export default function AccountDetails() {
 
   // useEffect to fetch account's totalProfit and transactions when the component mounts
   useEffect(() => {
-    // fetchAccountInfo(); 
+    fetchAccountInfo(); 
     fetchTransactions(); 
   }, [transactionDetailUpdate]);
 
@@ -103,9 +105,15 @@ export default function AccountDetails() {
   }, [transactionsFromApi]);
 
   useEffect(() => {
-    window.electron.addTransactionDetail(transactionUpdateAfterApi);
-    const repsonse = transactionUpdateAfterApi.map(prepareTransactionDetailForDb);
-    setTransactionDetailUpdate(repsonse);
+    window.electron.checkIfTransactionDetailExists(transactionUpdateAfterApi).then((notFoundRows) => {
+      setPreTransactionDetailUpdate(notFoundRows);
+      console.log(notFoundRows);
+      if (preTransactionDetailUpdate.length > 0) {
+        window.electron.addTransactionDetail(preTransactionDetailUpdate);
+        const responseTwo = preTransactionDetailUpdate.map(prepareTransactionDetailForDb);
+        setTransactionDetailUpdate(responseTwo);
+      }
+    });
   }, [transactionUpdateAfterApi]);
 
   useEffect(() => {
@@ -127,7 +135,7 @@ export default function AccountDetails() {
           {transactions.map(transaction => ( 
             <button 
               key={transaction.transactionId} 
-              onClick={() => handleOnClick(transaction.transactionId)}
+              onClick={() => handleOnClick(transaction.tokenId)}
             >
               {transaction.tokenId} - Cost: {transaction.cost} - Profit: {transaction.profit} 
             </button>

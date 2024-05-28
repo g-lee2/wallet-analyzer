@@ -32,7 +32,7 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
     db.run(`CREATE TABLE IF NOT EXISTS transaction_detail (
       transactionDetailId INTEGER PRIMARY KEY AUTOINCREMENT,
       tokenId TEXT, 
-      transactionHash TEXT,
+      transactionHash TEXT UNIQUE,
       fromToken TEXT,
       fromAmount DOUBLE,
       toToken TEXT,
@@ -98,6 +98,47 @@ ipcMain.handle('get-account-total-profit', async (event, publicKey) => {
   });
 });
 
+ipcMain.handle('sum-and-update-total-profit', async (event, publicKey) => {
+  try {
+    // Step 1: Sum all prop1 and prop3 values related to this publicKey in table1
+    const totalProfit = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT SUM(profit) AS totalProfit, SUM(cost) AS totalCost FROM account_transactions WHERE publicKey = ?',
+        [publicKey],
+        (err, row) => {
+          if (err) {
+            reject('Error fetching profit and cost sums: ' + err.message);
+          } else {
+            const total = (row ? row.totalProfit : 0) + (row ? row.totalCost : 0);
+            resolve(total);
+          }
+        }
+      );
+    });
+
+    // Step 2: Update prop2 with the calculated sum in table2
+    await new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE account SET totalProfit = ? WHERE publicKey = ?',
+        [totalProfit, publicKey],
+        function (err) {
+          if (err) {
+            reject('Error updating prop2: ' + err.message);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+
+    console.log('Successfully updated totalProfit for publicKey:', publicKey);
+    return 'Success';
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error processing the request: ' + error.message);
+  }
+});
+
 ipcMain.handle('get-transaction-id', async (event, tokenId) => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -113,36 +154,6 @@ ipcMain.handle('get-transaction-id', async (event, tokenId) => {
     );
   });
 });
-
-// ipcMain.handle('add-transaction', (event, rows) => {
-//   return new Promise((resolve, reject) => {
-//     db.serialize(() => {
-//       db.run('BEGIN TRANSACTION');
-//       const stmt = db.prepare(
-//         `INSERT INTO account_transactions (publicKey, tokenId, ticker, cost, profit) VALUES (?, ?, ?, ?, ?)`
-//       );
-
-//       rows.forEach((row) => {
-//         stmt.run([row.publicKey, row.tokenId, row.ticker, row.cost, row.profit], function (err) {
-//           if (err) {
-//             reject(err.message); // This will stop and reject the first error encountered
-//             return;
-//           }
-//         });
-//       });
-
-//       db.run('COMMIT TRANSACTION', (err) => {
-//         if (err) {
-//           reject(err.message); // Handle commit errors
-//         } else {
-//           stmt.finalize(); // Make sure to finalize the statement
-//           console.log(`A row has been inserted with rowid`);
-//           resolve('All rows have been inserted successfully');
-//         }
-//       });
-//     });
-//   });
-// });
 
 ipcMain.handle('add-transaction', async (event, rows) => {
   return new Promise((resolve, reject) => {
@@ -196,13 +207,13 @@ ipcMain.handle('add-transaction-detail', (event, rows) => {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
       db.run('BEGIN TRANSACTION DETAIL');
-      const stmt = db.prepare(`INSERT INTO transaction_detail (tokenId, 
+      const stmt = db.prepare(`INSERT INTO transaction_detail (tokenId,
         transactionHash,
         fromToken,
         fromAmount,
         toToken,
         toAmount,
-        time) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+        time) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(transactionHash) DO NOTHING`);
 
       rows.forEach((row) => {
         stmt.run(
@@ -249,6 +260,61 @@ ipcMain.handle('get-transaction-details', async (event, tokenId) => {
       }
     });
   });
+});
+
+// ipcMain.handle('check-if-transaction-detail-exists', (event, objects) => {
+//   return new Promise((resolve, reject) => {
+//     const transactionHashes = objects.map((obj) => obj.transactionHash); // Extracting IDs from objects
+//     const placeholders = transactionHashes.map(() => '?').join(','); // Creating the placeholder string
+//     const query = `SELECT transactionHash FROM table_table WHERE transactionHash IN (${placeholders})`; // Constructing the query
+
+//     db.all(query, transactionHashes, function (err, rows) {
+//       if (err) {
+//         reject('Error checking existence: ' + err.message);
+//       } else {
+//         const foundTransactionHashes = new Set(rows.map((row) => row.transactionHash)); // Storing found TransactionHashes in a Set
+//         const notFoundObjects = objects.filter(
+//           (obj) => !foundTransactionHashes.has(obj.transactionHash)
+//         ); // Filtering out objects not found
+
+//         resolve(notFoundObjects); // Resolving the promise with the objects not found
+//       }
+//     });
+//   })
+//     .then((notFoundObjects) => {
+//       return notFoundObjects;
+//     })
+//     .catch((error) => {
+//       throw new Error('Error checking existence: ' + error.message);
+//     });
+// });
+ipcMain.handle('check-if-transaction-detail-exists', async (event, rows) => {
+  const notFoundRows = [];
+
+  for (const row of rows) {
+    const transactionHash = row.transactionHash;
+    const result = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT transactionHash FROM transaction_detail WHERE transactionHash = ?',
+        [transactionHash],
+        (err, row) => {
+          if (err) {
+            reject('Error checking existence: ' + err.message);
+          } else {
+            resolve(row || null);
+          }
+        }
+      );
+    }).catch((error) => {
+      throw new Error(error);
+    });
+
+    if (!result) {
+      notFoundRows.push(row);
+    }
+  }
+
+  return notFoundRows;
 });
 
 // Function to create the main window of the Electron app

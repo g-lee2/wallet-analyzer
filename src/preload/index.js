@@ -17,6 +17,9 @@ const api = {
   // `publicKey` is the argument passed which will be used by the main process to return a certain account into the database
   getAccountTotalProfit: (publicKey) => ipcRenderer.invoke('get-account-total-profit', publicKey),
 
+  sumAndUpdateTotalProfit: (publicKey) =>
+    ipcRenderer.invoke('sum-and-update-total-profit', publicKey),
+
   getTransactionId: (tokenId) => ipcRenderer.invoke('get-transaction-id', tokenId),
 
   // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transaction' channel
@@ -30,7 +33,10 @@ const api = {
   addTransactionDetail: (rows) => ipcRenderer.invoke('add-transaction-detail', rows),
   // Function to retrieve transactions. It sends a message to the main process to invoke the 'get-transaction-details' channel
   // `transactionId` is the argument passed which will be used by the main process to return a certain transaction's details into the database
-  getTransactionDetails: (tokenId) => ipcRenderer.invoke('get-transaction-details', tokenId)
+  getTransactionDetails: (tokenId) => ipcRenderer.invoke('get-transaction-details', tokenId),
+
+  checkIfTransactionDetailExists: (rows) =>
+    ipcRenderer.invoke('check-if-transaction-detail-exists', rows)
 };
 
 // Using contextBridge to expose the defined API object to the renderer process under the global
@@ -41,9 +47,11 @@ contextBridge.exposeInMainWorld('electron', {
   addAccount: api.addAccount, // Exposing the addAccunt function
   getAccounts: api.getAccounts, // Exposing the getAccounts function
   getAccountTotalProfit: api.getAccountTotalProfit,
+  sumAndUpdateTotalProfit: api.sumAndUpdateTotalProfit,
   getTransactionId: api.getTransactionId,
   addTransaction: api.addTransaction, // Exposing the addTransaction function
   getTransactions: api.getTransactions, // Exposing the getTransactions function
   addTransactionDetail: api.addTransactionDetail, // Exposing the addTransactionDetail function
-  getTransactionDetails: api.getTransactionDetails // Exposing the getTransactionDetails function
+  getTransactionDetails: api.getTransactionDetails, // Exposing the getTransactionDetails function
+  checkIfTransactionDetailExists: api.checkIfTransactionDetailExists
 });
