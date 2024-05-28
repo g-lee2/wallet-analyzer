@@ -23,27 +23,31 @@ db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS account (
     id INTEGER PRIMARY KEY AUTOINCREMENT,  // 'id' column, auto-increments for each new entry
     publicKey TEXT,                           // 'publicKey' column, stores the public key as text
-    totalProfit INTEGER                          // 'totalProfit' column, stores a number (integer)
+    totalProfit DOUBLE                          // 'totalProfit' column, stores a number (integer)
   )`);
 
   // Create the 'account_transactions' table if it doesn't already exist
   db.run(`CREATE TABLE IF NOT EXISTS account_transactions (
     transactionId INTEGER PRIMARY KEY AUTOINCREMENT, 
     publicKey TEXT, 
+    tokenId TEXT UNIQUE,
     ticker TEXT,
-    cost DECIMAL,
-    profit DECIMAL,
+    cost DOUBLE,
+    profit DOUBLE,
     FOREIGN KEY (publicKey) REFERENCES account (publicKey)
   )`);
 
   // Create the 'transaction_detail' table if it doesn't already exist
   db.run(`CREATE TABLE IF NOT EXISTS transaction_detail (
     transactionDetailId INTEGER PRIMARY KEY AUTOINCREMENT,
-    transactionId INTEGER, 
-    transactionHash TEXT,
-    transactionDetail TEXT,
+    tokenId TEXT, 
+    transactionHash TEXT UNIQUE,
+    fromToken TEXT,
+    fromAmount DOUBLE,
+    toToken TEXT,
+    toAmount DOUBLE,
     time DATETIME,
-    FOREIGN KEY (transactionId) REFERENCES account_transactions (transactionId)
+    FOREIGN KEY (tokenId) REFERENCES account_transactions (tokenId)
   )`);
 });
 
@@ -106,25 +110,93 @@ function getAccountTotalProfit(publicKey) {
   });
 }
 
-// Define a function to add a transaction to the 'account_transactions' table
-function addTransaction(publicKey, ticker, cost, profit) {
-  return new Promise((resolve, reject) => {
-    // Prepare an SQL statement for inserting data into the 'account_transactions' table
-    const stmt = db.prepare(
-      `INSERT INTO account_transactions (publicKey, ticker, cost, profit) VALUES (?, ?, ?, ?)`
-    );
-
-    // Run the prepared SQL statement with the provided public key, ticker, cost, profit values
-    stmt.run(publicKey, ticker, cost, profit, function (err) {
-      if (err) {
-        reject(err.message); // If an error occurs, reject the promise with the error message
-      } else {
-        resolve(`A row has been inserted with rowid ${this.lastID}`); // Otherwise, resolve the promise with the rowid of the inserted row
-      }
+function sumAndUpdateTotalProfit(publicKey) {
+  try {
+    // Step 1: Sum all prop1 and prop3 values related to this publicKey in table1
+    const totalProfit = new Promise((resolve, reject) => {
+      db.get(
+        'SELECT SUM(profit) AS totalProfit, SUM(cost) AS totalCost FROM account_transactions WHERE publicKey = ?',
+        [publicKey],
+        (err, row) => {
+          if (err) {
+            reject('Error fetching profit and cost sums: ' + err.message);
+          } else {
+            const total = (row ? row.totalProfit : 0) + (row ? row.totalCost : 0);
+            resolve(total);
+          }
+        }
+      );
     });
 
-    // Finalize the statement to release resources associated with it
-    stmt.finalize();
+    // Step 2: Update prop2 with the calculated sum in table2
+    new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE account SET totalProfit = ? WHERE publicKey = ?',
+        [totalProfit, publicKey],
+        function (err) {
+          if (err) {
+            reject('Error updating totalProfit: ' + err.message);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+
+    console.log('Successfully updated totalProfit for publicKey:', publicKey);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Define a function to retrieve a certain transactions's id from the 'account' table
+function getTransactionId(tokenId) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT transactionId FROM account_transactions WHERE tokenId = ?',
+      [tokenId],
+      (err, row) => {
+        if (err) {
+          reject(new Error('Failed to retrieve transactions id from the database: ' + err.message));
+        } else {
+          resolve(row);
+        }
+      }
+    );
+  });
+}
+
+function addTransaction(db, rows) {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run('BEGIN'); // Start transaction
+
+      rows.forEach((row) => {
+        db.run(
+          `INSERT INTO account_transactions (publicKey, tokenId, ticker, cost, profit) VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(tokenId) DO UPDATE SET
+            cost = cost + EXCLUDED.cost,
+            profit = profit + EXCLUDED.profit`,
+          [row.publicKey, row.tokenId, row.ticker, row.cost, row.profit],
+          (err) => {
+            if (err) {
+              db.run('ROLLBACK'); // Roll back on error
+              reject(err);
+              return;
+            }
+          }
+        );
+      });
+
+      db.run('COMMIT', (err) => {
+        // Commit all changes
+        if (err) {
+          reject('Failed to commit transaction: ' + err.message);
+        } else {
+          resolve('All user data updated successfully.');
+        }
+      });
+    });
   });
 }
 
@@ -142,41 +214,106 @@ function getTransactions(publicKey) {
 }
 
 // Define a function to add an account to the 'transaction_detail' table
-function addTransactionDetail(transactionId, transactionHash, transactionDetail, time) {
+function addTransactionDetail(rows) {
   return new Promise((resolve, reject) => {
-    // Prepare an SQL statement for inserting data into the 'transaction_detail' table
     const stmt = db.prepare(
-      `INSERT INTO transaction_detail (transactionId, transactionHash, transactionDetail, time) VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO transaction_detail (tokenId,
+        transactionHash,
+        fromToken,
+        fromAmount,
+        toToken,
+        toAmount,
+        time) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(transactionHash) DO NOTHING`
     );
 
-    // Run the prepared SQL statement with the provided transactionId, transactionHash, transactionDetail, time, and tip
-    stmt.run(transactionId, transactionHash, transactionDetail, time, function (err) {
-      if (err) {
-        reject(err.message); // If an error occurs, reject the promise with the error message
-      } else {
-        resolve(`A row has been inserted with rowid ${this.lastID}`); // Otherwise, resolve the promise with the rowid of the inserted row
-      }
+    db.serialize(() => {
+      db.run('BEGIN TRANSACTION DETAIL');
+      rows.forEach((row) => {
+        stmt.run(
+          row.tokenId,
+          row.transactionHash,
+          row.fromToken,
+          row.fromAmount,
+          row.toToken,
+          row.toAmount,
+          row.time,
+          function (err) {
+            if (err) {
+              reject(err.message);
+            }
+          }
+        );
+      });
+      db.run('COMMIT TRANSACTION DETAIL', (err) => {
+        if (err) {
+          reject(err.message);
+        } else {
+          resolve('All rows have been inserted successfully');
+        }
+      });
     });
 
-    // Finalize the statement to release resources associated with it
     stmt.finalize();
   });
 }
 
+// function checkIfTransactionDetailExists(rows) {
+//   return new Promise((resolve, reject) => {
+//     const transactionHashes = rows.map((obj) => obj.transactionHash);
+//     const placeholders = transactionHashes.map(() => '?').join(',');
+//     const query = `SELECT transactionHash FROM transaction_detail WHERE transactionHash IN (${placeholders})`;
+
+//     db.all(query, transactionHashes, function (err, rows) {
+//       if (err) {
+//         reject('Error checking existence: ' + err.message);
+//       } else {
+//         const foundTransactionHashes = new Set(rows.map((row) => row.transactionHash));
+//         const notFoundRows = rows.filter((obj) => !foundTransactionHashes.has(obj.transactionHash));
+
+//         resolve(notFoundRows);
+//       }
+//     });
+//   });
+// }
+function checkIfTransactionDetailExists(rows) {
+  const notFoundRows = [];
+
+  for (const row of rows) {
+    const transactionHash = row.transactionHash;
+    const result = new Promise((resolve, reject) => {
+      db.get(
+        'SELECT transactionHash FROM transaction_detail WHERE transactionHash = ?',
+        [transactionHash],
+        (err, row) => {
+          if (err) {
+            reject('Error checking existence: ' + err.message);
+          } else {
+            resolve(row || null);
+          }
+        }
+      );
+    }).catch((error) => {
+      throw new Error(error);
+    });
+
+    if (!result) {
+      notFoundRows.push(row);
+    }
+  }
+
+  return notFoundRows;
+}
+
 // Define a function to retrieve all transaction details from the 'transaction_detail' table
-function getTransactionDetails(transactionId) {
+function getTransactionDetails(tokenId) {
   return new Promise((resolve, reject) => {
     // Execute an SQL query to select all columns from the 'transaction_detail' table
-    db.all(
-      `SELECT * FROM transaction_detail WHERE transactionId = ?`,
-      [transactionId],
-      (err, rows) => {
-        if (err) {
-          reject(err.message); // If an error occurs during the query, reject the promise with the error message
-        }
-        resolve(rows); // If the query is successful, resolve the promise with the rows of transactions
+    db.all(`SELECT * FROM transaction_detail WHERE tokenId = ?`, [tokenId], (err, rows) => {
+      if (err) {
+        reject(err.message); // If an error occurs during the query, reject the promise with the error message
       }
-    );
+      resolve(rows); // If the query is successful, resolve the promise with the rows of transactions
+    });
   });
 }
 
@@ -188,6 +325,9 @@ module.exports = {
   addTransaction,
   getTransactions,
   getAccountTotalProfit,
+  sumAndUpdateTotalProfit,
   addTransactionDetail,
-  getTransactionDetails
+  getTransactionDetails,
+  getTransactionId,
+  checkIfTransactionDetailExists
 };

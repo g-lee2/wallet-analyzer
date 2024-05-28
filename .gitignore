@@ -1,5 +1,10 @@
 node_modules
 dist
 out
+.env
 .DS_Store
 *.log*
+data.json
+extra.json
+dataNot.json
+database.sqlite
