@@ -11,6 +11,7 @@ export default function AccountDetails() {
   const [preTransactionDetailUpdate, setPreTransactionDetailUpdate] = useState([]);
   const [transactionDetailUpdate, setTransactionDetailUpdate] = useState([]);
   const [transactionsFromApi, setTransactionsFromApi] = useState([]);
+  const [allAddedToDb, setAllAddedToDb] = useState();
 
   function changeToLocalDateTime(timestamp) {
     // Convert to milliseconds
@@ -108,16 +109,21 @@ export default function AccountDetails() {
     window.electron.checkIfTransactionDetailExists(transactionUpdateAfterApi).then((notFoundRows) => {
       setPreTransactionDetailUpdate(notFoundRows);
       console.log(notFoundRows);
-      if (preTransactionDetailUpdate.length > 0) {
-        window.electron.addTransactionDetail(preTransactionDetailUpdate);
-        const responseTwo = preTransactionDetailUpdate.map(prepareTransactionDetailForDb);
-        setTransactionDetailUpdate(responseTwo);
-      }
     });
   }, [transactionUpdateAfterApi]);
 
   useEffect(() => {
+    if (preTransactionDetailUpdate.length > 0) {
+      window.electron.addTransactionDetail(preTransactionDetailUpdate);
+      const responseTwo = preTransactionDetailUpdate.map(prepareTransactionDetailForDb);
+      setTransactionDetailUpdate(responseTwo);
+    }
+  }, [preTransactionDetailUpdate]);
+
+  useEffect(() => {
     window.electron.addTransaction(transactionDetailUpdate);
+    fetchAccountInfo(); 
+    fetchTransactions();
   }, [transactionDetailUpdate]);
 
   const handleOnClick = (transactionId) => {
