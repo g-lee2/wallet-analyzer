@@ -4,3 +4,6 @@ out
 .env
 .DS_Store
 *.log*
+data.json
+extra.json
+dataNot.json
