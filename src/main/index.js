@@ -165,11 +165,11 @@ ipcMain.handle('add-transaction', async (event, rows) => {
 
       rows.forEach((row) => {
         db.run(
-          `INSERT INTO account_transactions (publicKey, tokenId, ticker, cost, profit) VALUES (?, ?, ?, ?, ?)
+          `INSERT INTO account_transactions (publicKey, tokenId, cost, profit) VALUES (?, ?, ?, ?)
             ON CONFLICT(tokenId) DO UPDATE SET
             cost = cost + EXCLUDED.cost,
             profit = profit + EXCLUDED.profit`,
-          [row.publicKey, row.tokenId, row.ticker, row.cost, row.profit],
+          [row.publicKey, row.tokenId, row.cost, row.profit],
           (err) => {
             if (err) {
               db.run('ROLLBACK'); // Roll back on error

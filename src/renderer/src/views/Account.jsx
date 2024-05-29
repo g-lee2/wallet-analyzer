@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box, Typography, Grid, TextField, Button } from '@mui/material';
 
 function Account() {
   const navigate = useNavigate();
@@ -40,21 +41,57 @@ function Account() {
 
   return (
     <div>
-      <input
-        type="text"
-        value={publicKey}
-        onChange={(e) => setPublicKey(e.target.value)}
-        placeholder="Enter Public Key"
-      />
-      <button onClick={handleAddAccount}>Search Account</button>  
-      <div>
-        <h2>Account List</h2>  
-        <ul>
-          {accounts.map(account => (  
-            <button key={account.id} onClick={() => setPublicKey(account.publicKey)}>{account.publicKey} - Total: {account.totalProfit} </button> 
+      <Box sx={{ textAlign: 'center', padding: 2 }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{color: '#C4B6B6'}}>
+        Account List
+        </Typography>
+        <Grid container spacing={2} justifyContent="center" alignItems="center">
+          <Grid item xs={12} md={8}>
+            <TextField fullWidth id="outlined-basic" label="Enter Public Key" variant="outlined" value={publicKey} onChange={(e) => setPublicKey(e.target.value)} InputLabelProps={{
+                  style: { color: '#C4B6B6' },
+                }}
+                InputProps={{
+                  style: { color: '#C4B6B6' },
+                }} sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#C4B6B6',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#C4B6B6',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#C4B6B6',
+                    },
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: '#C4B6B6',
+                  },
+                  '& .MuiInputBase-input': {
+                    color: '#C4B6B6',
+                  },
+                }}/>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
+  backgroundColor: '#5e5a66'}}} fullWidth variant="contained" onClick={handleAddAccount}>
+              Search
+              </Button>
+            </Box>
+          </Grid>
+        </Grid>
+        <Grid container spacing={2} justifyContent="center" sx={{ marginTop: 4 }}>
+          {accounts.map(account => (
+            <Grid item key={account.id}>
+              <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
+  backgroundColor: '#5e5a66'}}} variant="contained" onClick={() => setPublicKey(account.publicKey)}>
+              {account.publicKey} - Total: {account.totalProfit}
+              </Button>
+            </Grid>
           ))}
-        </ul>
-      </div>
+        </Grid>
+      </Box>
     </div>
   );
 }
