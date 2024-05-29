@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Grid, TextField, Button } from '@mui/material';
 
-function Account() {
+export default function Account() {
   const navigate = useNavigate();
   // State to store the input value for public key
   const [publicKey, setPublicKey] = useState('');
@@ -70,13 +70,14 @@ function Account() {
                   '& .MuiInputBase-input': {
                     color: '#C4B6B6',
                   },
-                }}/>
+                }}
+            />
           </Grid>
           <Grid item xs={12} md={4}>
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-  backgroundColor: '#5e5a66'}}} fullWidth variant="contained" onClick={handleAddAccount}>
-              Search
+                backgroundColor: '#5e5a66'}}} fullWidth variant="contained" onClick={handleAddAccount}>
+                  Search
               </Button>
             </Box>
           </Grid>
@@ -85,8 +86,8 @@ function Account() {
           {accounts.map(account => (
             <Grid item key={account.id}>
               <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-  backgroundColor: '#5e5a66'}}} variant="contained" onClick={() => setPublicKey(account.publicKey)}>
-              {account.publicKey} - Total: {account.totalProfit}
+                backgroundColor: '#5e5a66'}}} variant="contained" onClick={() => setPublicKey(account.publicKey)}>
+                  {account.publicKey} - Total: {account.totalProfit}
               </Button>
             </Grid>
           ))}
@@ -95,5 +96,3 @@ function Account() {
     </div>
   );
 }
-
-export default Account;
