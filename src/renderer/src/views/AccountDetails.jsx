@@ -1,6 +1,22 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react"; 
 import data from './data.json';
+import tokenData from './getAsset.json';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Link,
+  Divider
+} from '@mui/material';
 
 export default function AccountDetails() {
   let {publicKey} = useParams();
@@ -71,6 +87,13 @@ export default function AccountDetails() {
     await setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
   };
 
+  const handleGetTokenName = async (tokenId) => {
+    const tokenName = tokenData.content.metadata.name;
+    const tokensymbol = tokenData.content.metadata.symbol;
+    await window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
+    fetchTransactions(); 
+  };
+
   const prepareForDb = (transaction) => {
     if (!transaction) {
       return;
@@ -132,21 +155,90 @@ export default function AccountDetails() {
 
   return (
     <>
-      <span>Account Details page</span>
-      <p>{publicKey} - Total Profit: {accountTotalProfit?.totalProfit ?? 0} SOL</p>
-      <span><a href="/">back</a></span>
-      <br />
-      <button onClick={handleGetTransactions}>Get Transactions</button>  
-      <ul>
-          {transactions.map(transaction => ( 
-            <button 
-              key={transaction.transactionId} 
-              onClick={() => handleOnClick(transaction.tokenId)}
-            >
-              {transaction.tokenId} - Cost: {transaction.cost} - Profit: {transaction.profit} 
-            </button>
-          ))}
-        </ul>
+      <Box sx={{ padding: 2, overflowY: 'auto', height: '100vh' }}>
+      <Grid container spacing={2} justifyContent="center">
+        <Grid item xs={12}>
+        <Grid container alignItems="center" spacing={2}>
+            <Grid item>
+            <Link href="/" sx={{ textDecoration: 'none' }}>
+            <Button sx={{ textAlign: 'left', backgroundColor:"#46424f", '&:hover': {
+  backgroundColor: '#5e5a66'}, color: '#C4B6B6' }}>Back</Button>
+          </Link>
+            </Grid>
+        </Grid>
+        <Grid item xs>
+              <Typography variant="h5" gutterBottom align="center" sx={{ color: '#C4B6B6'}}>
+              Account Details Page
+              </Typography>
+            </Grid>
+          </Grid>
+        <Grid item xs={12} md={8}>
+          <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6' }}>
+            <CardContent>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body1" sx={{ marginBottom: 2 }}>
+                Wallet: {publicKey}
+              </Typography>
+              <Divider sx={{ marginY: 1, backgroundColor: '#908d96'}} />
+              <Typography variant="body1" sx={{ marginTop: 2.5 }}>
+                Total Profit: {accountTotalProfit?.totalProfit ?? 0} SOL
+              </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sx={{ textAlign: 'center' }}>
+          <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
+  backgroundColor: '#5e5a66'}}} variant="contained" onClick={handleGetTransactions}>Get Transactions</Button>
+        </Grid>
+        <Grid item xs={12} md={8}>
+        <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1 }}>
+          <Table>
+          <TableHead>
+              <TableRow>
+                <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Token</TableCell>
+                <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Cost</TableCell>
+                <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Profit</TableCell>
+                <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {transactions.map(transaction => (
+                <TableRow key={transaction.transactionId} >
+                  <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
+                    <Link
+                      variant="contained"
+                      onClick={() => handleOnClick(transaction.tokenId)}
+                      sx={{ width: '100%', color: '#C4B6B6', textDecorationColor: 'gray', textUnderlineOffset: '3px', '&:hover': {
+                        cursor: 'pointer',
+                      } }}
+                    >
+                    {transaction.tokenName ? transaction.tokenName : transaction.tokenId} 
+                    </Link>
+                  </TableCell>
+                  <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.cost}</TableCell>
+                  <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.profit} </TableCell>
+                    {!transaction.tokenName && (
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => handleGetTokenName(transaction.tokenId)}
+                        sx={{ marginTop: 1, width: '100%', backgroundColor:"#46424f", '&:hover': {
+                          backgroundColor: '#5e5a66'} }}
+                      >
+                        Get Token Name
+                      </Button>
+                      </TableCell>
+                    )}
+                    
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
     </>
   );
 }

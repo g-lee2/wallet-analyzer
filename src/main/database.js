@@ -21,9 +21,9 @@ db.serialize(() => {
 
   // Create a new table called 'account' if it doesn't already exist
   db.run(`CREATE TABLE IF NOT EXISTS account (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,  // 'id' column, auto-increments for each new entry
-    publicKey TEXT,                           // 'publicKey' column, stores the public key as text
-    totalProfit DOUBLE                          // 'totalProfit' column, stores a number (integer)
+    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    publicKey TEXT,                           
+    totalProfit DOUBLE                          
   )`);
 
   // Create the 'account_transactions' table if it doesn't already exist
@@ -31,7 +31,8 @@ db.serialize(() => {
     transactionId INTEGER PRIMARY KEY AUTOINCREMENT, 
     publicKey TEXT, 
     tokenId TEXT UNIQUE,
-    ticker TEXT,
+    tokenName TEXT,
+    tokenSymbol TEXT,
     cost DOUBLE,
     profit DOUBLE,
     FOREIGN KEY (publicKey) REFERENCES account (publicKey)
@@ -41,6 +42,8 @@ db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS transaction_detail (
     transactionDetailId INTEGER PRIMARY KEY AUTOINCREMENT,
     tokenId TEXT, 
+    tokenName TEXT,
+    tokenSymbol TEXT,
     transactionHash TEXT UNIQUE,
     fromToken TEXT,
     fromAmount DOUBLE,
@@ -173,11 +176,11 @@ function addTransaction(db, rows) {
 
       rows.forEach((row) => {
         db.run(
-          `INSERT INTO account_transactions (publicKey, tokenId, ticker, cost, profit) VALUES (?, ?, ?, ?, ?)
+          `INSERT INTO account_transactions (publicKey, tokencost, cost, profit) VALUES (?, ?, ?, ?)
             ON CONFLICT(tokenId) DO UPDATE SET
             cost = cost + EXCLUDED.cost,
             profit = profit + EXCLUDED.profit`,
-          [row.publicKey, row.tokenId, row.ticker, row.cost, row.profit],
+          [row.publicKey, row.tokenId, row.cost, row.profit],
           (err) => {
             if (err) {
               db.run('ROLLBACK'); // Roll back on error
@@ -317,6 +320,56 @@ function getTransactionDetails(tokenId) {
   });
 }
 
+function updateTokenNameSymbol(tokenId, tokenName, tokenSymbol) {
+  try {
+    new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE account_transactions SET tokenName = ?, tokenSymbol = ? WHERE tokenId = ?',
+        [tokenName, tokenSymbol, tokenId],
+        function (err) {
+          if (err) {
+            reject('Error updating account_transactions: ' + err.message);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+
+    new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE transaction_detail SET tokenName = ?, tokenSymbol = ? WHERE tokenId = ?',
+        [tokenName, tokenSymbol, tokenId],
+        function (err) {
+          if (err) {
+            reject('Error updating transaction_detail: ' + err.message);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+
+    console.log(`Successfully updated tokenName and tokenSymbol for tokenId: ${tokenId}`);
+    return 'Success';
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error processing the request: ' + error.message);
+  }
+}
+
+function getAccountTokenName(tokenId) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT tokenName FROM transaction_detail WHERE tokenId = ?', [tokenId], (err, row) => {
+      if (err) {
+        reject(new Error('Failed to retrieve account from the database: ' + err.message));
+      } else {
+        resolve(row);
+      }
+    });
+  });
+}
+
 // Export the all add, get, update, check account functions so they can be used elsewhere in the project
 module.exports = {
   checkAccountExists,
@@ -329,5 +382,7 @@ module.exports = {
   addTransactionDetail,
   getTransactionDetails,
   getTransactionId,
-  checkIfTransactionDetailExists
+  checkIfTransactionDetailExists,
+  updateTokenNameSymbol,
+  getAccountTokenName
 };
