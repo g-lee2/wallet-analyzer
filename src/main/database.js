@@ -358,6 +358,18 @@ function updateTokenNameSymbol(tokenId, tokenName, tokenSymbol) {
   }
 }
 
+function getAccountTokenName(tokenId) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT tokenName FROM transaction_detail WHERE tokenId = ?', [tokenId], (err, row) => {
+      if (err) {
+        reject(new Error('Failed to retrieve account from the database: ' + err.message));
+      } else {
+        resolve(row);
+      }
+    });
+  });
+}
+
 // Export the all add, get, update, check account functions so they can be used elsewhere in the project
 module.exports = {
   checkAccountExists,
@@ -371,5 +383,6 @@ module.exports = {
   getTransactionDetails,
   getTransactionId,
   checkIfTransactionDetailExists,
-  updateTokenNameSymbol
+  updateTokenNameSymbol,
+  getAccountTokenName
 };

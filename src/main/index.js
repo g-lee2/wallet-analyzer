@@ -360,6 +360,18 @@ ipcMain.handle('update-token-name-symbol', async (event, tokenId, tokenName, tok
   }
 });
 
+ipcMain.handle('get-account-token-name', async (event, tokenId) => {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT tokenName FROM transaction_detail WHERE tokenId = ?', [tokenId], (err, row) => {
+      if (err) {
+        reject(new Error('Failed to retrieve account from the database: ' + err.message));
+      } else {
+        resolve(row);
+      }
+    });
+  });
+});
+
 // Function to create the main window of the Electron app
 function createWindow() {
   const mainWindow = new BrowserWindow({
