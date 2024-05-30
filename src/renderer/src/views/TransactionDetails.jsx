@@ -85,11 +85,11 @@ export default function TransactionDetails() {
                     <TableRow key={transactionDetail.transactionDetailId}>
                       <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.time}</TableCell>
                       <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.transactionHash}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.fromAmount}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.fromToken === 'sol' ? transactionDetail.fromToken : transactionDetail.tokenName}</TableCell>
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{Math.abs(transactionDetail.fromAmount)}</TableCell>
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.fromToken === 'SOL' ? transactionDetail.fromToken : (transactionDetail.tokenName ? transactionDetail.tokenName : transactionDetail.tokenId)}</TableCell>
                       <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{'>'}</TableCell>
                       <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.toAmount}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.fromToken === 'sol' ? transactionDetail.fromToken : transactionDetail.tokenName}</TableCell>
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.toToken === 'SOL' ? transactionDetail.toToken : (transactionDetail.tokenName ? transactionDetail.tokenName : transactionDetail.tokenId)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

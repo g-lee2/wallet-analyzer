@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect,useRef } from "react"; 
-// import data from './data.json';
+import { useState, useEffect } from "react"; 
 // import tokenData from './getAsset.json';
+// import data from "./extra.json";
+
 import {
   Box,
   Button,
@@ -100,18 +101,18 @@ export default function AccountDetails() {
 
   // Function to handle saving transaction as an array of objects in state when the button is clicked
   useEffect(() => {
-    if (!data.length === 0) {
-      console.log("here");
-      const filteredItems = data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
-        time: changeToLocalDateTime(timestamp), 
-        transactionHash: signature,
-        tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
-        tokenId: tokenTransfers.map(({ mint }) => mint)[0],
-        accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
-      }));
-      setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
-      console.log("done??");
-    }
+    console.log("here");
+    const filteredItems = data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
+      time: changeToLocalDateTime(timestamp), 
+      transactionHash: signature,
+      tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
+      tokenId: tokenTransfers.map(({ mint }) => mint)[0],
+      accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
+    })); 
+    const finalFilter = filteredItems.filter((item) => item.tokenId !== null);
+    const finalFinalFilter = finalFilter.filter((item) => item.tokenId !== undefined);
+    setTransactionsFromApi([...transactionsFromApi, ...finalFinalFilter]);
+    console.log("done??");
   }, [data]);
 
   // const handleGetTransactions = async () => {
@@ -240,10 +241,10 @@ export default function AccountDetails() {
             </Card>
           </Grid>
           <Grid item xs={12} sx={{ textAlign: 'center' }}>
-            <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
+            {/* <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
     backgroundColor: '#5e5a66'}}} variant="contained" 
-    // onClick={fetchDataApiCall}
-    >Get Transactions</Button>
+    onClick={fetchDataApiCall}
+    >Get Transactions</Button> */}
           </Grid>
           <Grid item xs={12} md={8}>
             <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1 }}>
@@ -274,15 +275,15 @@ export default function AccountDetails() {
                       <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.profit} </TableCell>
                       
                         <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
-                        {!transaction.tokenName && (
+                        {/* {!transaction.tokenName && (
                           <Button
-                            // onClick={() => fetchTokenApiCall(transaction.tokenId)}
+                            onClick={() => fetchTokenApiCall(transaction.tokenId)}
                             sx={{ marginTop: 1, width: '100%', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
                               backgroundColor: '#2d2a30'} }}
                           >
                             Get Token Name
                           </Button>
-                          )} 
+                          )}  */}
                         </TableCell>
                     </TableRow>
                   ))}
