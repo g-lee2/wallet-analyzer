@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react"; 
-import data from './data.json';
-import tokenData from './getAsset.json';
+import { useState, useEffect,useRef } from "react"; 
+// import data from './data.json';
+// import tokenData from './getAsset.json';
 import {
   Box,
   Button,
@@ -27,7 +27,8 @@ export default function AccountDetails() {
   const [preTransactionDetailUpdate, setPreTransactionDetailUpdate] = useState([]);
   const [transactionDetailUpdate, setTransactionDetailUpdate] = useState([]);
   const [transactionsFromApi, setTransactionsFromApi] = useState([]);
-  const [allAddedToDb, setAllAddedToDb] = useState();
+  const [data, setData] = useState([]);
+  const [tokenNameSymb, setTokenNameSymb] = useState();
 
   function changeToLocalDateTime(timestamp) {
     // Convert to milliseconds
@@ -75,24 +76,73 @@ export default function AccountDetails() {
     fetchTransactions(); 
   }, [transactionDetailUpdate]);
 
-  // Function to handle saving transaction as an array of objects in state when the button is clicked
-  const handleGetTransactions = async () => {
-    const filteredItems = await data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
-      time: changeToLocalDateTime(timestamp), 
-      transactionHash: signature,
-      tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
-      tokenId: tokenTransfers.map(({ mint }) => mint)[0],
-      accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
-    }));
-    await setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
+  const fetchDataApiCall = async () => {
+    console.log("apicalltransaction");
+    try {
+        const result = await window.electron.fetchTransactionData(`https://api.helius.xyz/v0/addresses/${publicKey}/transactions`);
+        setData(result);
+        // handleGetTransactions();
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
   };
 
-  const handleGetTokenName = async (tokenId) => {
-    const tokenName = tokenData.content.metadata.name;
-    const tokensymbol = tokenData.content.metadata.symbol;
-    await window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
-    fetchTransactions(); 
+  const fetchTokenApiCall = async (token) => {
+    console.log("apicalltoken");
+    try {
+        const result = await window.electron.fetchTokenData(token);
+        // handleGetTransactions();
+        setTokenNameSymb(result);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
   };
+
+  // Function to handle saving transaction as an array of objects in state when the button is clicked
+  useEffect(() => {
+    if (!data.length === 0) {
+      console.log("here");
+      const filteredItems = data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
+        time: changeToLocalDateTime(timestamp), 
+        transactionHash: signature,
+        tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
+        tokenId: tokenTransfers.map(({ mint }) => mint)[0],
+        accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
+      }));
+      setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
+      console.log("done??");
+    }
+  }, [data]);
+
+  // const handleGetTransactions = async () => {
+  //   console.log("here");
+  //   const filteredItems = await data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
+  //     time: changeToLocalDateTime(timestamp), 
+  //     transactionHash: signature,
+  //     tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
+  //     tokenId: tokenTransfers.map(({ mint }) => mint)[0],
+  //     accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
+  //   }));
+  //   await setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
+  //   console.log("done??");
+  // };
+
+  useEffect(() => {
+    if (tokenNameSymb != undefined) {
+      const tokenName = tokenNameSymb.result.content.metadata.name;
+      const tokensymbol = tokenNameSymb.result.content.metadata.symbol;
+      const tokenId = tokenNameSymb.result.id;
+      window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
+      fetchTransactions(); 
+    }
+  }, [tokenNameSymb]);
+
+  // const handleGetTokenName = async () => {
+  //   const tokenName = tokenNameSymb.result.content.metadata.name;
+  //   const tokensymbol = tokenNameSymb.result.content.metadata.symbol;
+  //   await window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
+  //   fetchTransactions(); 
+  // };
 
   const prepareForDb = (transaction) => {
     if (!transaction) {
@@ -191,7 +241,9 @@ export default function AccountDetails() {
           </Grid>
           <Grid item xs={12} sx={{ textAlign: 'center' }}>
             <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-    backgroundColor: '#5e5a66'}}} variant="contained" onClick={handleGetTransactions}>Get Transactions</Button>
+    backgroundColor: '#5e5a66'}}} variant="contained" 
+    // onClick={fetchDataApiCall}
+    >Get Transactions</Button>
           </Grid>
           <Grid item xs={12} md={8}>
             <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1 }}>
@@ -220,18 +272,18 @@ export default function AccountDetails() {
                       </TableCell>
                       <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.cost}</TableCell>
                       <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.profit} </TableCell>
-                      {!transaction.tokenName && (
+                      
                         <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
+                        {!transaction.tokenName && (
                           <Button
-                            variant="outlined"
-                            onClick={() => handleGetTokenName(transaction.tokenId)}
-                            sx={{ marginTop: 1, width: '100%', backgroundColor:"#46424f", '&:hover': {
-                              backgroundColor: '#5e5a66'} }}
+                            // onClick={() => fetchTokenApiCall(transaction.tokenId)}
+                            sx={{ marginTop: 1, width: '100%', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
+                              backgroundColor: '#2d2a30'} }}
                           >
                             Get Token Name
                           </Button>
+                          )} 
                         </TableCell>
-                      )}  
                     </TableRow>
                   ))}
                 </TableBody>
