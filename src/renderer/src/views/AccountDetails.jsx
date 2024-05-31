@@ -225,8 +225,8 @@ export default function AccountDetails() {
               </Typography>
             </Grid>
           </Grid>
-          <Grid item xs={12} md={8}>
-            <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6' }}>
+          <Grid item>
+            <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6', maxWidth: 800 }}>
               <CardContent>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="body1" sx={{ marginBottom: 2 }}>
@@ -246,8 +246,8 @@ export default function AccountDetails() {
     onClick={fetchDataApiCall}
     >Get Transactions</Button> */}
           </Grid>
-          <Grid item xs={12} md={8}>
-            <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1 }}>
+          <Grid item>
+            <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1, overflow: 'auto', maxWidth: 900 }}>
               <Table>
                 <TableHead>
                   <TableRow>

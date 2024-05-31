@@ -53,8 +53,8 @@ export default function TransactionDetails() {
               <Typography variant="h5" align="center" sx={{color: '#C4B6B6'}}>Transaction Details Page</Typography>
             </Grid>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6', marginTop: 2 }}>
+          <Grid item>
+            <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6', marginTop: 2, maxWidth: 700 }}>
               <CardContent>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="body1" sx={{ marginBottom: 1 }}>
