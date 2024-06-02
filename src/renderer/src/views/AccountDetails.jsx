@@ -72,10 +72,15 @@ export default function AccountDetails() {
   };
 
   // useEffect to fetch account's totalProfit and transactions when the component mounts
+  // useEffect(() => {
+  //   fetchAccountInfo(); 
+  //   fetchTransactions(); 
+  // }, [transactionDetailUpdate]);
+
   useEffect(() => {
     fetchAccountInfo(); 
     fetchTransactions(); 
-  }, [transactionDetailUpdate]);
+  }, []);
 
   const fetchDataApiCall = async () => {
     console.log("apicalltransaction");
@@ -195,9 +200,11 @@ export default function AccountDetails() {
   }, [preTransactionDetailUpdate]);
 
   useEffect(() => {
-    window.electron.addTransaction(transactionDetailUpdate);
-    fetchAccountInfo(); 
-    fetchTransactions();
+    window.electron.addTransaction(transactionDetailUpdate)
+    .then(() => {
+      fetchAccountInfo(); 
+      fetchTransactions();
+    });
   }, [transactionDetailUpdate]);
 
   const handleOnClick = (transactionId) => {
