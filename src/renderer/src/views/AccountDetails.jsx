@@ -71,12 +71,6 @@ export default function AccountDetails() {
     setTransactions(fetchedTransactions);  // Update the transaction state with the fetched transactions
   };
 
-  // useEffect to fetch account's totalProfit and transactions when the component mounts
-  // useEffect(() => {
-  //   fetchAccountInfo(); 
-  //   fetchTransactions(); 
-  // }, [transactionDetailUpdate]);
-
   useEffect(() => {
     fetchAccountInfo(); 
     fetchTransactions(); 
@@ -120,19 +114,6 @@ export default function AccountDetails() {
     console.log("done??");
   }, [data]);
 
-  // const handleGetTransactions = async () => {
-  //   console.log("here");
-  //   const filteredItems = await data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
-  //     time: changeToLocalDateTime(timestamp), 
-  //     transactionHash: signature,
-  //     tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
-  //     tokenId: tokenTransfers.map(({ mint }) => mint)[0],
-  //     accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
-  //   }));
-  //   await setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
-  //   console.log("done??");
-  // };
-
   useEffect(() => {
     if (tokenNameSymb != undefined) {
       const tokenName = tokenNameSymb.result.content.metadata.name;
@@ -142,13 +123,6 @@ export default function AccountDetails() {
       fetchTransactions(); 
     }
   }, [tokenNameSymb]);
-
-  // const handleGetTokenName = async () => {
-  //   const tokenName = tokenNameSymb.result.content.metadata.name;
-  //   const tokensymbol = tokenNameSymb.result.content.metadata.symbol;
-  //   await window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
-  //   fetchTransactions(); 
-  // };
 
   const prepareForDb = (transaction) => {
     if (!transaction) {
