@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { join } from 'path';
 import sqlite3 from 'sqlite3';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import 'dotenv/config';
 
 // Define the path to the SQLite database
 const dbPath = join(__dirname, '../../resources/database.sqlite');
@@ -372,6 +373,47 @@ ipcMain.handle('get-account-token-name', async (event, tokenId) => {
   });
 });
 
+ipcMain.handle('fetch-transaction-data', async (event, endpoint) => {
+  const apiKey = process.env.REACT_APP_API_KEY;
+  const url = `${endpoint}?api-key=${apiKey}&limit=10`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('fetch-token-data', async (event, token) => {
+  const apiKey = process.env.REACT_APP_API_KEY;
+  const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'text',
+        method: 'getAsset',
+        params: {
+          id: `${token}`
+        }
+      })
+    });
+    const data = await response.json();
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error;
+  }
+});
+
 // Function to create the main window of the Electron app
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -382,7 +424,9 @@ function createWindow() {
     icon: process.platform === 'linux' ? join(__dirname, '../../resources/icon.png') : undefined,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      nodeIntegration: false,
+      contextIsolation: true
     }
   });
 

@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react"; 
-import data from './data.json';
-import tokenData from './getAsset.json';
+// import tokenData from './getAsset.json';
+// import data from "./extra.json";
+
 import {
   Box,
   Button,
@@ -27,7 +28,8 @@ export default function AccountDetails() {
   const [preTransactionDetailUpdate, setPreTransactionDetailUpdate] = useState([]);
   const [transactionDetailUpdate, setTransactionDetailUpdate] = useState([]);
   const [transactionsFromApi, setTransactionsFromApi] = useState([]);
-  const [allAddedToDb, setAllAddedToDb] = useState();
+  const [data, setData] = useState([]);
+  const [tokenNameSymb, setTokenNameSymb] = useState();
 
   function changeToLocalDateTime(timestamp) {
     // Convert to milliseconds
@@ -70,29 +72,83 @@ export default function AccountDetails() {
   };
 
   // useEffect to fetch account's totalProfit and transactions when the component mounts
+  // useEffect(() => {
+  //   fetchAccountInfo(); 
+  //   fetchTransactions(); 
+  // }, [transactionDetailUpdate]);
+
   useEffect(() => {
     fetchAccountInfo(); 
     fetchTransactions(); 
-  }, [transactionDetailUpdate]);
+  }, []);
+
+  const fetchDataApiCall = async () => {
+    console.log("apicalltransaction");
+    try {
+        const result = await window.electron.fetchTransactionData(`https://api.helius.xyz/v0/addresses/${publicKey}/transactions`);
+        setData(result);
+        // handleGetTransactions();
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+  };
+
+  const fetchTokenApiCall = async (token) => {
+    console.log("apicalltoken");
+    try {
+        const result = await window.electron.fetchTokenData(token);
+        // handleGetTransactions();
+        setTokenNameSymb(result);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+  };
 
   // Function to handle saving transaction as an array of objects in state when the button is clicked
-  const handleGetTransactions = async () => {
-    const filteredItems = await data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
+  useEffect(() => {
+    console.log("here");
+    const filteredItems = data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
       time: changeToLocalDateTime(timestamp), 
       transactionHash: signature,
       tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
       tokenId: tokenTransfers.map(({ mint }) => mint)[0],
       accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
-    }));
-    await setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
-  };
+    })); 
+    const finalFilter = filteredItems.filter((item) => item.tokenId !== null);
+    const finalFinalFilter = finalFilter.filter((item) => item.tokenId !== undefined);
+    setTransactionsFromApi([...transactionsFromApi, ...finalFinalFilter]);
+    console.log("done??");
+  }, [data]);
 
-  const handleGetTokenName = async (tokenId) => {
-    const tokenName = tokenData.content.metadata.name;
-    const tokensymbol = tokenData.content.metadata.symbol;
-    await window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
-    fetchTransactions(); 
-  };
+  // const handleGetTransactions = async () => {
+  //   console.log("here");
+  //   const filteredItems = await data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
+  //     time: changeToLocalDateTime(timestamp), 
+  //     transactionHash: signature,
+  //     tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
+  //     tokenId: tokenTransfers.map(({ mint }) => mint)[0],
+  //     accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
+  //   }));
+  //   await setTransactionsFromApi([...transactionsFromApi, ...filteredItems]);
+  //   console.log("done??");
+  // };
+
+  useEffect(() => {
+    if (tokenNameSymb != undefined) {
+      const tokenName = tokenNameSymb.result.content.metadata.name;
+      const tokensymbol = tokenNameSymb.result.content.metadata.symbol;
+      const tokenId = tokenNameSymb.result.id;
+      window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
+      fetchTransactions(); 
+    }
+  }, [tokenNameSymb]);
+
+  // const handleGetTokenName = async () => {
+  //   const tokenName = tokenNameSymb.result.content.metadata.name;
+  //   const tokensymbol = tokenNameSymb.result.content.metadata.symbol;
+  //   await window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
+  //   fetchTransactions(); 
+  // };
 
   const prepareForDb = (transaction) => {
     if (!transaction) {
@@ -101,9 +157,9 @@ export default function AccountDetails() {
     const newTransaction = {
       tokenId: transaction.tokenId,
       transactionHash: transaction.transactionHash,
-      fromToken: transaction.accountBalanceChange < 0 ? 'sol' : transaction.tokenId,
+      fromToken: transaction.accountBalanceChange < 0 ? 'SOL' : transaction.tokenId,
       fromAmount: transaction.accountBalanceChange < 0 ? transaction.accountBalanceChange : transaction.tokenTransferred,
-      toToken: transaction.accountBalanceChange < 0 ? transaction.tokenId : 'sol', 
+      toToken: transaction.accountBalanceChange < 0 ? transaction.tokenId : 'SOL', 
       toAmount: transaction.accountBalanceChange < 0 ? transaction.tokenTransferred : transaction.accountBalanceChange,
       time: transaction.time
     }
@@ -144,9 +200,11 @@ export default function AccountDetails() {
   }, [preTransactionDetailUpdate]);
 
   useEffect(() => {
-    window.electron.addTransaction(transactionDetailUpdate);
-    fetchAccountInfo(); 
-    fetchTransactions();
+    window.electron.addTransaction(transactionDetailUpdate)
+    .then(() => {
+      fetchAccountInfo(); 
+      fetchTransactions();
+    });
   }, [transactionDetailUpdate]);
 
   const handleOnClick = (transactionId) => {
@@ -156,89 +214,92 @@ export default function AccountDetails() {
   return (
     <>
       <Box sx={{ padding: 2, overflowY: 'auto', height: '100vh' }}>
-      <Grid container spacing={2} justifyContent="center">
-        <Grid item xs={12}>
-        <Grid container alignItems="center" spacing={2}>
-            <Grid item>
-            <Link href="/" sx={{ textDecoration: 'none' }}>
-            <Button sx={{ textAlign: 'left', backgroundColor:"#46424f", '&:hover': {
-  backgroundColor: '#5e5a66'}, color: '#C4B6B6' }}>Back</Button>
-          </Link>
+        <Grid container spacing={2} justifyContent="center">
+          <Grid item xs={12}>
+            <Grid container alignItems="center" spacing={2}>
+              <Grid item>
+                <Link href="/" sx={{ textDecoration: 'none' }}>
+                <Button sx={{ textAlign: 'left', backgroundColor:"#46424f", '&:hover': {
+                  backgroundColor: '#5e5a66'}, color: '#C4B6B6' }}>
+                    Back
+                </Button>
+                </Link>
+              </Grid>
             </Grid>
-        </Grid>
-        <Grid item xs>
+            <Grid item xs>
               <Typography variant="h5" gutterBottom align="center" sx={{ color: '#C4B6B6'}}>
               Account Details Page
               </Typography>
             </Grid>
           </Grid>
-        <Grid item xs={12} md={8}>
-          <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6' }}>
-            <CardContent>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body1" sx={{ marginBottom: 2 }}>
-                Wallet: {publicKey}
-              </Typography>
-              <Divider sx={{ marginY: 1, backgroundColor: '#908d96'}} />
-              <Typography variant="body1" sx={{ marginTop: 2.5 }}>
-                Total Profit: {accountTotalProfit?.totalProfit ?? 0} SOL
-              </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sx={{ textAlign: 'center' }}>
-          <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-  backgroundColor: '#5e5a66'}}} variant="contained" onClick={handleGetTransactions}>Get Transactions</Button>
-        </Grid>
-        <Grid item xs={12} md={8}>
-        <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1 }}>
-          <Table>
-          <TableHead>
-              <TableRow>
-                <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Token</TableCell>
-                <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Cost</TableCell>
-                <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Profit</TableCell>
-                <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {transactions.map(transaction => (
-                <TableRow key={transaction.transactionId} >
-                  <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
-                    <Link
-                      variant="contained"
-                      onClick={() => handleOnClick(transaction.tokenId)}
-                      sx={{ width: '100%', color: '#C4B6B6', textDecorationColor: 'gray', textUnderlineOffset: '3px', '&:hover': {
-                        cursor: 'pointer',
-                      } }}
-                    >
-                    {transaction.tokenName ? transaction.tokenName : transaction.tokenId} 
-                    </Link>
-                  </TableCell>
-                  <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.cost}</TableCell>
-                  <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.profit} </TableCell>
-                    {!transaction.tokenName && (
+          <Grid item>
+            <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6', maxWidth: 800 }}>
+              <CardContent>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body1" sx={{ marginBottom: 2 }}>
+                    Wallet: {publicKey}
+                  </Typography>
+                  <Divider sx={{ marginY: 1, backgroundColor: '#908d96'}} />
+                  <Typography variant="body1" sx={{ marginTop: 2.5 }}>
+                    Total Profit: {accountTotalProfit?.totalProfit ?? 0} SOL
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sx={{ textAlign: 'center' }}>
+            {/* <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
+    backgroundColor: '#5e5a66'}}} variant="contained" 
+    onClick={fetchDataApiCall}
+    >Get Transactions</Button> */}
+          </Grid>
+          <Grid item>
+            <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1, overflow: 'auto', maxWidth: 900 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Token</TableCell>
+                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Cost</TableCell>
+                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Profit</TableCell>
+                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {transactions.map(transaction => (
+                    <TableRow key={transaction.transactionId} >
                       <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
-                      <Button
-                        variant="outlined"
-                        onClick={() => handleGetTokenName(transaction.tokenId)}
-                        sx={{ marginTop: 1, width: '100%', backgroundColor:"#46424f", '&:hover': {
-                          backgroundColor: '#5e5a66'} }}
-                      >
-                        Get Token Name
-                      </Button>
+                        <Link
+                          variant="contained"
+                          onClick={() => handleOnClick(transaction.tokenId)}
+                          sx={{ width: '100%', color: '#C4B6B6', textDecorationColor: 'gray', textUnderlineOffset: '3px', '&:hover': {
+                            cursor: 'pointer',
+                          } }}
+                        >
+                        {transaction.tokenName ? transaction.tokenName : transaction.tokenId} 
+                        </Link>
                       </TableCell>
-                    )}
-                    
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </Box>
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.cost}</TableCell>
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.profit} </TableCell>
+                      
+                        <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
+                        {/* {!transaction.tokenName && (
+                          <Button
+                            onClick={() => fetchTokenApiCall(transaction.tokenId)}
+                            sx={{ marginTop: 1, width: '100%', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
+                              backgroundColor: '#2d2a30'} }}
+                          >
+                            Get Token Name
+                          </Button>
+                          )}  */}
+                        </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Box>
+          </Grid>
         </Grid>
-      </Grid>
-    </Box>
+      </Box>
     </>
   );
 }

@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { getAccountTokenName } from '../main/database';
 
 // Define an API object that holds functions to perform IPC calls
 const api = {
@@ -42,7 +41,11 @@ const api = {
   updateTokenNameSymbol: (tokenId, tokenName, tokenSymbol) =>
     ipcRenderer.invoke('update-token-name-symbol', tokenId, tokenName, tokenSymbol),
 
-  getAccountTokenName: (tokenId) => ipcRenderer.invoke('get-account-token-name', tokenId)
+  getAccountTokenName: (tokenId) => ipcRenderer.invoke('get-account-token-name', tokenId),
+
+  fetchTransactionData: (endpoint) => ipcRenderer.invoke('fetch-transaction-data', endpoint),
+
+  fetchTokenData: (token) => ipcRenderer.invoke('fetch-token-data', token)
 };
 
 // Using contextBridge to expose the defined API object to the renderer process under the global
@@ -61,5 +64,7 @@ contextBridge.exposeInMainWorld('electron', {
   getTransactionDetails: api.getTransactionDetails, // Exposing the getTransactionDetails function
   checkIfTransactionDetailExists: api.checkIfTransactionDetailExists,
   updateTokenNameSymbol: api.updateTokenNameSymbol,
-  getAccountTokenName: api.getAccountTokenName
+  getAccountTokenName: api.getAccountTokenName,
+  fetchTransactionData: api.fetchTransactionData,
+  fetchTokenData: api.fetchTokenData
 });
