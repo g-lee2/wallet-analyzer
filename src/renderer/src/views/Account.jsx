@@ -86,7 +86,7 @@ export default function Account() {
           {accounts.map(account => (
             <Grid item key={account.id}>
               <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-                backgroundColor: '#5e5a66'}}} variant="contained" onClick={() => setPublicKey(account.publicKey)}>
+                backgroundColor: '#5e5a66'}}} variant="contained" onClick={() => navigate(`/account-details/${account.publicKey}`)}>
                   {account.publicKey} - Total: {account.totalProfit}
               </Button>
             </Grid>
