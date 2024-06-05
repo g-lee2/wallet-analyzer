@@ -228,7 +228,7 @@ export default function AccountDetails() {
     >Get Transactions</Button> */}
           </Grid>
           <Grid item>
-            <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1, overflow: 'auto', maxWidth: 900 }}>
+            <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1, overflow: 'auto', width: 900 }}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -241,7 +241,7 @@ export default function AccountDetails() {
                 <TableBody>
                   {transactions.map(transaction => (
                     <TableRow key={transaction.transactionId} >
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', height: '42px' }}>
                         <Link
                           variant="contained"
                           onClick={() => handleOnClick(transaction.tokenId)}
@@ -252,19 +252,19 @@ export default function AccountDetails() {
                         {transaction.tokenName ? transaction.tokenName : transaction.tokenId} 
                         </Link>
                       </TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.cost}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>{transaction.profit} </TableCell>
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', height: '42px' }}>{transaction.cost}</TableCell>
+                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', height: '42px' }}>{transaction.profit} </TableCell>
                       
-                        <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray' }}>
-                        {/* {!transaction.tokenName && (
+                        <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', height: '42px' }}>
+                        {!transaction.tokenName && (
                           <Button
                             onClick={() => fetchTokenApiCall(transaction.tokenId)}
-                            sx={{ marginTop: 1, width: '100%', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
+                            sx={{ width: '100%', height: '26px', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
                               backgroundColor: '#2d2a30'} }}
                           >
                             Get Token Name
                           </Button>
-                          )}  */}
+                        )} 
                         </TableCell>
                     </TableRow>
                   ))}

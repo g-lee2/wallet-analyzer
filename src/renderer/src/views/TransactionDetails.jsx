@@ -54,7 +54,7 @@ export default function TransactionDetails() {
             </Grid>
           </Grid>
           <Grid item>
-            <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6', marginTop: 2, maxWidth: 700 }}>
+            <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6', width: 600 }}>
               <CardContent>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="body1" sx={{ marginBottom: 1 }}>
