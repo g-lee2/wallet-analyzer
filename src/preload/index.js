@@ -43,9 +43,25 @@ const api = {
 
   getAccountTokenName: (tokenId) => ipcRenderer.invoke('get-account-token-name', tokenId),
 
-  fetchTransactionData: (endpoint) => ipcRenderer.invoke('fetch-transaction-data', endpoint),
+  fetchTransactionData: (pubKey) => ipcRenderer.invoke('fetch-transaction-data', pubKey),
 
-  fetchTokenData: (token) => ipcRenderer.invoke('fetch-token-data', token)
+  fetchTokenData: (token) => ipcRenderer.invoke('fetch-token-data', token),
+
+  fetchTransactionDataTwo: (signatures) =>
+    ipcRenderer.invoke('fetch-transaction-data-two', signatures),
+
+  fetchTransactionDataThree: (batch) => ipcRenderer.invoke('fetch-transaction-data-three', batch),
+
+  fetchTransactionDataFour: (batch) => ipcRenderer.invoke('fetch-transaction-data-four', batch),
+
+  fetchTransactionDataBefore: (pubKey, transHash) =>
+    ipcRenderer.invoke('fetch-transaction-data-before', pubKey, transHash),
+
+  getTokenTransactionHash: (tokenId) => ipcRenderer.invoke('get-token-transaction-hash', tokenId),
+
+  fetchTransactionDataOne: () => ipcRenderer.invoke('fetch-transaction-data-one'),
+
+  updateCostProfit: () => ipcRenderer.invoke('update-cost-profit')
 };
 
 // Using contextBridge to expose the defined API object to the renderer process under the global
@@ -66,5 +82,12 @@ contextBridge.exposeInMainWorld('electron', {
   updateTokenNameSymbol: api.updateTokenNameSymbol,
   getAccountTokenName: api.getAccountTokenName,
   fetchTransactionData: api.fetchTransactionData,
-  fetchTokenData: api.fetchTokenData
+  fetchTokenData: api.fetchTokenData,
+  fetchTransactionDataTwo: api.fetchTransactionDataTwo,
+  fetchTransactionDataThree: api.fetchTransactionDataThree,
+  fetchTransactionDataFour: api.fetchTransactionDataFour,
+  fetchTransactionDataBefore: api.fetchTransactionDataBefore,
+  getTokenTransactionHash: api.getTokenTransactionHash,
+  fetchTransactionDataOne: api.fetchTransactionDataOne,
+  updateCostProfit: api.updateCostProfit
 });

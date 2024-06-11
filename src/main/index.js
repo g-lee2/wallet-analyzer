@@ -107,6 +107,7 @@ ipcMain.handle('sum-and-update-total-profit', async (event, publicKey) => {
     // Step 1: Sum all prop1 and prop3 values related to this publicKey in table1
     const totalProfit = await new Promise((resolve, reject) => {
       db.get(
+        // SELECT SUM(profit) AS totalProfit FROM account_transactions WHERE publicKey = ?'
         'SELECT SUM(profit) AS totalProfit, SUM(cost) AS totalCost FROM account_transactions WHERE publicKey = ?',
         [publicKey],
         (err, row) => {
@@ -114,6 +115,7 @@ ipcMain.handle('sum-and-update-total-profit', async (event, publicKey) => {
             reject('Error fetching profit and cost sums: ' + err.message);
           } else {
             const total = (row ? row.totalProfit : 0) + (row ? row.totalCost : 0);
+            // const total = row ? row.totalProfit : 0;
             resolve(total);
           }
         }
@@ -143,6 +145,80 @@ ipcMain.handle('sum-and-update-total-profit', async (event, publicKey) => {
   }
 });
 
+ipcMain.handle('sum-and-update-cost-profit', async (event, all) => {
+  try {
+    // Step 1: Sum all prop1 and prop3 values related to this publicKey in table1
+    const totalProfit = await new Promise((resolve, reject) => {
+      db.get(
+        // SELECT SUM(profit) AS totalProfit FROM account_transactions WHERE publicKey = ?'
+        'SELECT SUM(profit) AS totalProfit, SUM(cost) AS totalCost FROM account_transactions WHERE publicKey = ?',
+        [publicKey],
+        (err, row) => {
+          if (err) {
+            reject('Error fetching profit and cost sums: ' + err.message);
+          } else {
+            const total = (row ? row.totalProfit : 0) + (row ? row.totalCost : 0);
+            // const total = row ? row.totalProfit : 0;
+            resolve(total);
+          }
+        }
+      );
+    });
+
+    // Step 2: Update prop2 with the calculated sum in table2
+    await new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE account SET totalProfit = ? WHERE publicKey = ?',
+        [totalProfit, publicKey],
+        function (err) {
+          if (err) {
+            reject('Error updating prop2: ' + err.message);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+
+    console.log('Successfully updated totalProfit for publicKey:', publicKey);
+    return 'Success';
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error processing the request: ' + error.message);
+  }
+});
+
+ipcMain.handle('update-cost-profit', async () => {
+  return new Promise((resolve, reject) => {
+    const updateSql = `
+          WITH AggregatedProps AS (
+              SELECT
+                  tokenId,
+                  SUM(CASE WHEN fromToken = 'SOL' THEN fromAmount ELSE 0 END) AS TotalCost,
+                  SUM(CASE WHEN toToken = 'SOL' THEN toAmount ELSE 0 END) AS TotalProfit
+              FROM transaction_detail
+              GROUP BY tokenId
+          )
+          UPDATE account_transactions
+          SET
+              cost = (SELECT TotalCost FROM AggregatedProps WHERE AggregatedProps.tokenId = account_transactions.tokenId),
+              profit = (SELECT TotalProfit FROM AggregatedProps WHERE AggregatedProps.tokenId = account_transactions.tokenId)
+          WHERE EXISTS (
+              SELECT 1 FROM AggregatedProps WHERE AggregatedProps.tokenId = account_transactions.tokenId
+          );
+      `;
+
+    db.run(updateSql, function (err) {
+      if (err) {
+        console.error('Error performing SQL operation', err.message);
+        reject(err);
+      } else {
+        resolve({ message: 'Update successful', changes: this.changes });
+      }
+    });
+  });
+});
+
 ipcMain.handle('get-transaction-id', async (event, tokenId) => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -166,11 +242,14 @@ ipcMain.handle('add-transaction', async (event, rows) => {
 
       rows.forEach((row) => {
         db.run(
-          `INSERT INTO account_transactions (publicKey, tokenId, cost, profit) VALUES (?, ?, ?, ?)
-            ON CONFLICT(tokenId) DO UPDATE SET
-            cost = cost + EXCLUDED.cost,
-            profit = profit + EXCLUDED.profit`,
-          [row.publicKey, row.tokenId, row.cost, row.profit],
+          // `INSERT INTO account_transactions (publicKey, tokenId, cost, profit) VALUES (?, ?, ?, ?)
+          //   ON CONFLICT(tokenId) DO UPDATE SET
+          //   cost = cost + EXCLUDED.cost,
+          //   profit = profit + EXCLUDED.profit`
+          `INSERT INTO account_transactions (publicKey, tokenId) VALUES (?, ?) ON CONFLICT(tokenId) DO NOTHING`,
+          // profit = (cost + (profit + EXCLUDED.profit))
+          // [row.publicKey, row.tokenId, row.cost, row.profit]
+          [row.publicKey, row.tokenId],
           (err) => {
             if (err) {
               db.run('ROLLBACK'); // Roll back on error
@@ -373,17 +452,177 @@ ipcMain.handle('get-account-token-name', async (event, tokenId) => {
   });
 });
 
-ipcMain.handle('fetch-transaction-data', async (event, endpoint) => {
+ipcMain.handle('get-token-transaction-hash', async (event, tokenId) => {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT transactionHash FROM transaction_detail WHERE tokenId = ? LIMIT 1',
+      [tokenId],
+      (err, row) => {
+        if (err) {
+          reject(new Error('Failed to retrieve account from the database: ' + err.message));
+        } else {
+          resolve(row);
+        }
+      }
+    );
+  });
+});
+
+ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
   const apiKey = process.env.REACT_APP_API_KEY;
-  const url = `${endpoint}?api-key=${apiKey}&limit=10`;
+  // const url = `${endpoint}?api-key=${apiKey}`;
+  const baseUrl = process.env.REACT_APP_URL;
+  const url = baseUrl + apiKey;
+  const body = {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'getSignaturesForAddress',
+    params: [
+      `${pubKey}`,
+      {
+        limit: 100,
+        commitment: 'confirmed'
+      }
+    ]
+  };
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error status: ${response.status}`);
+    }
     const data = await response.json();
-    console.log(data);
+    // console.log('Data to send to renderer:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching data:', error);
-    throw error;
+    console.error('Failed to fetch data:', error);
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle('fetch-transaction-data-before', async (event, pubKey, transHash) => {
+  const apiKey = process.env.REACT_APP_API_KEY;
+  // const url = `${endpoint}?api-key=${apiKey}`;
+  const baseUrl = process.env.REACT_APP_URL;
+  const url = baseUrl + apiKey;
+  const body = {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'getSignaturesForAddress',
+    params: [
+      `${pubKey}`,
+      {
+        limit: 6,
+        commitment: 'confirmed',
+        before: `${transHash}`
+      }
+    ]
+  };
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error status: ${response.status}`);
+    }
+    const data = await response.json();
+    // console.log('Data to send to renderer:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle('fetch-transaction-data-two', async (event, signatures) => {
+  try {
+    const batchRequest = signatures.map((signature, index) => ({
+      jsonrpc: '2.0',
+      id: index + 1,
+      method: 'getTransaction',
+      params: [
+        signature,
+        { encoding: 'json', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }
+      ]
+    }));
+    // console.log(batchRequest);
+    return batchRequest;
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
+  const apiKey = process.env.REACT_APP_API_KEY;
+  // const url = `${endpoint}?api-key=${apiKey}`;
+  const baseUrl = process.env.REACT_APP_URL;
+  const url = baseUrl + apiKey;
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(batch)
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error status: ${response.status}`);
+    }
+    const data = await response.json();
+    // console.log('Data to send to renderer:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle('fetch-transaction-data-one', async (event) => {
+  const apiKey = process.env.REACT_APP_API_KEY;
+  // const url = `${endpoint}?api-key=${apiKey}`;
+  const baseUrl = process.env.REACT_APP_URL;
+  const url = baseUrl + apiKey;
+  const body = {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'getTransaction',
+    params: [
+      '3BfETUq9sL5UcmfBshxDebEUnnb8FFwW7VP3TcP4vP8qyJtPTUJg2G2zAj7sJcND5B2HeVNaWDxJGACJASFkU97d',
+      { encoding: 'json', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }
+    ]
+  };
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error status: ${response.status}`);
+    }
+    const data = await response.json();
+    // console.log('Data to send to renderer:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle('fetch-transaction-data-four', async (event, batch) => {
+  try {
+    const filteredTransactions = await batch.filter(
+      (transaction) => transaction.result.meta.err === null
+    );
+    // console.log(filteredTransactions);
+    return filteredTransactions;
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    return { error: error.message };
   }
 });
 
