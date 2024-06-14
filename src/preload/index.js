@@ -61,7 +61,9 @@ const api = {
 
   fetchTransactionDataOne: () => ipcRenderer.invoke('fetch-transaction-data-one'),
 
-  updateCostProfit: () => ipcRenderer.invoke('update-cost-profit')
+  updateCostProfit: () => ipcRenderer.invoke('update-cost-profit'),
+
+  deleteRowsSol: () => ipcRenderer.invoke('delete-rows-sol')
 };
 
 // Using contextBridge to expose the defined API object to the renderer process under the global
@@ -89,5 +91,6 @@ contextBridge.exposeInMainWorld('electron', {
   fetchTransactionDataBefore: api.fetchTransactionDataBefore,
   getTokenTransactionHash: api.getTokenTransactionHash,
   fetchTransactionDataOne: api.fetchTransactionDataOne,
-  updateCostProfit: api.updateCostProfit
+  updateCostProfit: api.updateCostProfit,
+  deleteRowsSol: api.deleteRowsSol
 });

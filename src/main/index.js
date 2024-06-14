@@ -188,6 +188,23 @@ ipcMain.handle('sum-and-update-cost-profit', async (event, all) => {
   }
 });
 
+// IPC handler for deleting rows with hardcoded conditions
+ipcMain.handle('delete-rows-sol', async () => {
+  const sql = `DELETE FROM account_transactions WHERE transactionId > 592 OR transactionId < 1311`;
+
+  return new Promise((resolve, reject) => {
+    db.run(sql, function (err) {
+      if (err) {
+        console.error('Error executing delete query', err.message);
+        reject(new Error('Error executing delete query'));
+      } else {
+        console.log(`Rows deleted: ${this.changes}`);
+        resolve({ message: 'Delete successful', changes: this.changes });
+      }
+    });
+  });
+});
+
 ipcMain.handle('update-cost-profit', async () => {
   return new Promise((resolve, reject) => {
     const updateSql = `
@@ -480,7 +497,7 @@ ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
     params: [
       `${pubKey}`,
       {
-        limit: 100,
+        limit: 20,
         commitment: 'confirmed'
       }
     ]
@@ -515,7 +532,7 @@ ipcMain.handle('fetch-transaction-data-before', async (event, pubKey, transHash)
     params: [
       `${pubKey}`,
       {
-        limit: 6,
+        limit: 800,
         commitment: 'confirmed',
         before: `${transHash}`
       }
@@ -618,8 +635,23 @@ ipcMain.handle('fetch-transaction-data-four', async (event, batch) => {
     const filteredTransactions = await batch.filter(
       (transaction) => transaction.result.meta.err === null
     );
+    const finalFilter = await filteredTransactions.filter(
+      (transaction) =>
+        transaction.result.transaction.message.accountKeys.includes(
+          '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'
+        ) ||
+        transaction.result.transaction.message.accountKeys.includes(
+          'So11111111111111111111111111111111111111112'
+        ) ||
+        transaction.result.transaction.message.accountKeys.includes(
+          '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'
+        ) ||
+        transaction.result.transaction.message.accountKeys.includes(
+          '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
+        )
+    );
     // console.log(filteredTransactions);
-    return filteredTransactions;
+    return finalFilter;
   } catch (error) {
     console.error('Failed to fetch data:', error);
     return { error: error.message };

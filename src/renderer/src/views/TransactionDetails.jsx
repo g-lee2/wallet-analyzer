@@ -12,8 +12,9 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Link
+  Link, Tooltip
 } from '@mui/material';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 
 export default function TransactionDetails() {
   let {tokenId} = useParams();
@@ -44,52 +45,68 @@ export default function TransactionDetails() {
             <Grid container alignItems="center" spacing={2}>
               <Grid item>
                 <Link href="../" sx={{ textDecoration: 'none' }}>
-                <Button sx={{ textAlign: 'left', backgroundColor:"#46424f", '&:hover': {
-        backgroundColor: '#5e5a66'}, color: '#C4B6B6' }}>Back</Button>
+                <Button sx={{ mt: 2, mb: 2, ml: 2, borderColor: '#A8E86A', color: "white", textTransform: 'none', verticalAlign: 'middle', '&:hover': {
+                color: '#a0da55'} }}>
+                  <ArrowBackIosNewIcon fontSize="small" sx={{marginRight: '6px'}} /> Back
+              </Button>
                 </Link>
               </Grid>
             </Grid>
-            <Grid item xs>
+            {/* <Grid item xs>
               <Typography variant="h5" align="center" sx={{color: '#C4B6B6'}}>Transaction Details Page</Typography>
-            </Grid>
+            </Grid> */}
           </Grid>
-          <Grid item>
-            <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6', width: 600 }}>
+          
+          <Grid item alignItems="center">
+            <Card sx={{ backgroundColor: 'rgba(0, 0, 0, 0)', color: 'white', width: 600}}>
               <CardContent>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="body1" sx={{ marginBottom: 1 }}>
+                  {/* <Typography variant="body1" sx={{ marginBottom: 1 }}>
                     Token:
-                  </Typography>
+                  </Typography> */}
                   <Typography variant="body1" sx={{ marginTop: 1 }}>{tokenName ? tokenName : tokenId}
                   </Typography>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item>
-            <Box sx={{ backgroundColor: '#5e5a66', padding: 2, borderRadius: 1, maxWidth: 900, overflow: 'auto' }}>
+          <Grid item alignItems="center">
+            <Box sx={{ backgroundColor: '#101010', padding: 2, borderRadius: '16px', maxWidth: 960, overflow: 'auto' }}>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word' }}>Time</TableCell>
-                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word' }}>Transaction Hash</TableCell>
-                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word' }}>From Amount</TableCell>
-                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word' }}>From Token</TableCell>
-                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word' }}>{'>'}</TableCell>
-                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word' }}>To Amount</TableCell>
-                    <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word' }}>To Token</TableCell>
+                    <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center' }}>Transaction Hash</TableCell>
+                    <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'right' }}> From</TableCell>
+                    <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center' }}></TableCell>
+                    <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center' }}></TableCell>
+                    <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'right' }}> To </TableCell>
+                    <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center' }}></TableCell>
+                    <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center' }}>Time</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {transactionDetailList.map(transactionDetail => (
-                    <TableRow key={transactionDetail.transactionDetailId}>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.time}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.transactionHash}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{Math.abs(transactionDetail.fromAmount)}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.fromToken === 'SOL' ? transactionDetail.fromToken : (transactionDetail.tokenName ? transactionDetail.tokenName : transactionDetail.tokenId)}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{'>'}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.toAmount}</TableCell>
-                      <TableCell sx={{ color: '#C4B6B6', borderBottom: '2px solid gray', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px' }}>{transactionDetail.toToken === 'SOL' ? transactionDetail.toToken : (transactionDetail.tokenName ? transactionDetail.tokenName : transactionDetail.tokenId)}</TableCell>
+                    <TableRow key={transactionDetail.transactionDetailId} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                      <Tooltip title={transactionDetail.transactionHash}>
+                      <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.transactionHash}</TableCell></Tooltip>
+                      <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{Math.abs(transactionDetail.fromAmount)}  </TableCell>
+                      <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.fromToken === 'SOL' ? transactionDetail.fromToken : (transactionDetail.tokenName ? transactionDetail.tokenName : 'Token')}</TableCell>
+                      <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{'>'}</TableCell>
+                      <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.toAmount} </TableCell>
+                      <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.toToken === 'SOL' ? transactionDetail.toToken : (transactionDetail.tokenName ? transactionDetail.tokenName : 'Token')}</TableCell>
+                      <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px', textAlign: 'center' }}>{transactionDetail.time} PST</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -1,4 +1,7 @@
 @import './base.css';
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/500.css';
+@import '@fontsource/poppins/600.css';
 
 body {
   display: flex;
@@ -14,15 +17,8 @@ code {
   font-weight: 600;
   padding: 3px 5px;
   border-radius: 2px;
-  background-color: var(--color-background-mute);
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    SF Mono,
-    Menlo,
-    Consolas,
-    Liberation Mono,
-    monospace;
+  background-color: '#101010';
+  font-family: 'Poppins', sans-serif;
   font-size: 85%;
 }
 
@@ -121,7 +117,7 @@ code {
   bottom: 30px;
   margin: 0 auto;
   padding: 15px 0;
-  font-family: 'Menlo', 'Lucida Console', monospace;
+  font-family: 'Poppins', sans-serif;
   display: inline-flex;
   overflow: hidden;
   align-items: center;
@@ -160,4 +156,29 @@ code {
   .actions {
     display: none;
   }
+}
+
+/* For webkit browsers */
+::-webkit-scrollbar {
+  width: 6px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #000000; /* Background of the track */
+  margin-left: 20px; /* Space to the left of the scrollbar */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b2f35f; /* Color of the thumb */
+  border-radius: 16px; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d8f9af; /* Color of the thumb on hover */
+}
+
+/* For Firefox */
+body {
+  scrollbar-width: thin;
+  scrollbar-color: #b2f35f #000000;
 }
