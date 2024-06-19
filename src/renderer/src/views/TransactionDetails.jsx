@@ -37,6 +37,8 @@ export default function TransactionDetails() {
     fetchTokenName(tokenId);
   }, []);
 
+  // const transactions = transactionDetailList.sort((a, b) => new Date(a.date) - new Date(b.date));
+
   return (
     <>
       <Box sx={{ padding: 2, overflow: 'auto', height: '100vh' }}>
@@ -58,7 +60,7 @@ export default function TransactionDetails() {
           </Grid>
           
           <Grid item alignItems="center">
-            <Card sx={{ backgroundColor: 'rgba(0, 0, 0, 0)', color: 'white', width: 600}}>
+            <Card sx={{ backgroundColor: 'rgba(0, 0, 0, 0)', color: 'white', width: 800}}>
               <CardContent>
                 <Box sx={{ textAlign: 'center' }}>
                   {/* <Typography variant="body1" sx={{ marginBottom: 1 }}>
@@ -102,7 +104,7 @@ export default function TransactionDetails() {
                   textOverflow: 'ellipsis', maxWidth: '275px' }}>{'>'}</TableCell>
                       <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.toAmount} </TableCell>
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{Math.abs(transactionDetail.toAmount)} </TableCell>
                       <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.toToken === 'SOL' ? transactionDetail.toToken : (transactionDetail.tokenName ? transactionDetail.tokenName : 'Token')}</TableCell>

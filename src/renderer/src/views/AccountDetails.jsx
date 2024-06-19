@@ -279,17 +279,26 @@ export default function AccountDetails() {
       }).filter(item => item !== undefined);
       
       let finalTokenBalanceChange = null;
+
+      // scroll, save where it is?
+      // bought sometimes calculated at less than 0 so wrong
+      // negative token numbers?? just make postive number? easy fix for now
+      // order the transactions newest to oldest
       
       if (preTokenNumber && postTokenNumber && preTokenNumber > postTokenNumber) {
         finalTokenBalanceChange = preTokenNumber - postTokenNumber;
+        // sell
       } else if (preTokenNumber && postTokenNumber && postTokenNumber > preTokenNumber) {
         finalTokenBalanceChange = postTokenNumber - preTokenNumber;
+        // bought
       } else if (preTokenNumber && !postTokenNumber && preTokenNumber === 0) {
         finalTokenBalanceChange = preTokenNumber;
+        // 
       } else if (preTokenNumber && !postTokenNumber) {
         finalTokenBalanceChange = null;
       } else if (!preTokenNumber && postTokenNumber) {
         finalTokenBalanceChange = postTokenNumber;
+        // bought
       } else {
         return null;
       };
@@ -327,6 +336,7 @@ export default function AccountDetails() {
     if (!transaction) {
       return;
     }
+    // token transferred
     const newTransaction = {
       tokenId: transaction.tokenId,
       transactionHash: transaction.transactionHash,

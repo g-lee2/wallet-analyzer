@@ -692,7 +692,6 @@ function createWindow() {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    icon: process.platform === 'linux' ? join(__dirname, '../../resources/icon.png') : undefined,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
