@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   Box,
@@ -18,6 +18,7 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 
 export default function TransactionDetails() {
   let {tokenId} = useParams();
+  const navigate = useNavigate();
   const [transactionDetailList, setTransactionDetailList] = useState([]);
   const [tokenName, setTokenName] = useState('');
 
@@ -46,7 +47,7 @@ export default function TransactionDetails() {
           <Grid item xs={12}>
             <Grid container alignItems="center" spacing={2}>
               <Grid item>
-                <Link href="../" sx={{ textDecoration: 'none' }}>
+                <Link onClick={() => navigate(-1)} sx={{ textDecoration: 'none' }}>
                 <Button sx={{ mt: 2, mb: 2, ml: 2, borderColor: '#A8E86A', color: "white", textTransform: 'none', verticalAlign: 'middle', '&:hover': {
                 color: '#a0da55'} }}>
                   <ArrowBackIosNewIcon fontSize="small" sx={{marginRight: '6px'}} /> Back

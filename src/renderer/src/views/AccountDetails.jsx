@@ -406,7 +406,7 @@ export default function AccountDetails() {
         <Grid item xs={12}>
           <Grid container>
             <Grid item xs={6} sx={{textAlign: 'left'}}>
-              <Link href="/" sx={{ textDecoration: 'none' }}>
+              <Link onClick={() => navigate(-1)} sx={{ textDecoration: 'none' }}>
               <Button sx={{ mt: 2, mb: 2, ml: 2, borderColor: '#A8E86A', color: "white", textTransform: 'none', verticalAlign: 'middle', '&:hover': {
                 color: '#a0da55'} }}>
                   <ArrowBackIosNewIcon fontSize="small" sx={{marginRight: '6px'}} /> Back
