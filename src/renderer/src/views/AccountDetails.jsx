@@ -1,13 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react"; 
-// import tokenData from './getAsset.json';
-// import data from "./extra.json";
 
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Grid,
   Typography,
   Table,
@@ -33,7 +29,6 @@ export default function AccountDetails() {
   const [transactionDetailUpdate, setTransactionDetailUpdate] = useState([]);
   const [transactionsFromApi, setTransactionsFromApi] = useState([]);
   const [data, setData] = useState([]);
-  const [tokenNameSymb, setTokenNameSymb] = useState();
 
   function changeToLocalDateTime(timestamp) {
     // Convert to milliseconds
@@ -83,45 +78,7 @@ export default function AccountDetails() {
 
   // this function gets the signatures for a specific public key, then grabs just the signature from the json response, and calls the function that will sort those into an array of JSON-RPC request objects
   const fetchDataApiCall = async () => {
-    console.log("apicalltransaction");
-    // try {
-    //     // const result = await window.electron.fetchTransactionData(`https://api.helius.xyz/v0/addresses/${publicKey}/transactions`);
-    //     window.electron.fetchTransactionData(publicKey);
-    //     // await window.electron.fetchTransactionDataTwo(result);
-    //     // setData(result);
-    //     // handleGetTransactions();
-    // } catch (error) {
-    //     console.error('Error fetching data:', error);
-    // }
     window.electron.fetchTransactionData(publicKey)
-    .then(data => {
-      if (!data) {
-        console.error('no data');
-      } else {
-        console.log('Data received from main process:', data);
-        const signatures = data.result.map((item) => item.signature);
-        createBatchRequests(signatures);
-      }
-    }).catch(error => {
-      console.error('Error in fetching data:', error);
-    });
-  };
-
-  // this function gets the signatures for a specific public key, then grabs just the signature from the json response, and calls the function that will sort those into an array of JSON-RPC request objects
-  const fetchDataApiCallBeforeTransaction = async (tokId) => {
-    console.log("apicalltransactionbeforeone");
-    // try {
-    //     // const result = await window.electron.fetchTransactionData(`https://api.helius.xyz/v0/addresses/${publicKey}/transactions`);
-    //     window.electron.fetchTransactionData(publicKey);
-    //     // await window.electron.fetchTransactionDataTwo(result);
-    //     // setData(result);
-    //     // handleGetTransactions();
-    // } catch (error) {
-    //     console.error('Error fetching data:', error);
-    // }
-    console.log(tokId);
-    const transHash = await window.electron.getTokenTransactionHash(tokId);
-    window.electron.fetchTransactionDataBefore(publicKey, transHash.transactionHash)
     .then(data => {
       if (!data) {
         console.error('no data');
@@ -137,20 +94,6 @@ export default function AccountDetails() {
 
   // this is the function that will sort those signatures into an array of JSON-RPC request objects
   const createBatchRequests = async (signs) => {
-    window.electron.fetchTransactionDataTwo(signs).then(data => {
-      if (!data) {
-        console.error('no data');
-      } else {
-        console.log('Data received from main process:', data);
-        makeBatchRequest(data);
-      }
-    }).catch(error => {
-      console.error('Error in fetching data:', error);
-    });
-  }
-
-  const createBatchRequestsTwo = async () => {
-    const signs = []
     window.electron.fetchTransactionDataTwo(signs).then(data => {
       if (!data) {
         console.error('no data');
@@ -190,50 +133,6 @@ export default function AccountDetails() {
       console.error('Error in fetching data:', error);
     });
   }
-
-  const fetchDataApiOneTransaction = async () => {
-    window.electron.fetchTransactionDataOne().then(data => {
-      if (!data) {
-        console.error('no data');
-      } else {
-        console.log('Data received from main process:', data);
-        setData(data);
-      }
-    }).catch(error => {
-      console.error('Error in fetching data:', error);
-    });
-  }
-
-  // const deleteRandomOne = async () => {
-  //   window.electron.deleteRowsSol();
-  // }
-
-  // Function that gets the token metadata from the HELIUS API NOT RPC and calls the function that will just grab the token name and symbol
-  const fetchTokenApiCall = async (token) => {
-    console.log("apicalltoken");
-    try {
-        const result = await window.electron.fetchTokenData(token);
-        // handleGetTransactions();
-        setTokenNameSymb(result);
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
-  };
-
-  // useEffect(() => {
-  //   console.log("here");
-  //   const filteredItems = data.map(({ timestamp, signature, tokenTransfers, accountData }) => ({
-  //     time: changeToLocalDateTime(timestamp), 
-  //     transactionHash: signature,
-  //     tokenTransferred: tokenTransfers.map(({ tokenAmount }) => tokenAmount)[0],
-  //     tokenId: tokenTransfers.map(({ mint }) => mint)[0],
-  //     accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
-  //   })); 
-  //   const finalFilter = filteredItems.filter((item) => item.tokenId !== null);
-  //   const finalFinalFilter = finalFilter.filter((item) => item.tokenId !== undefined);
-  //   setTransactionsFromApi([...transactionsFromApi, ...finalFinalFilter]);
-  //   console.log("done??");
-  // }, [data]);
 
   // Function to handle saving transaction as an array of objects in state when the button is clicked and it takes only necessary information from each transaction doesn't save to the db though, it needs to be prepared 
   useEffect(() => {
@@ -279,26 +178,17 @@ export default function AccountDetails() {
       }).filter(item => item !== undefined);
       
       let finalTokenBalanceChange = null;
-
-      // scroll, save where it is?
-      // bought sometimes calculated at less than 0 so wrong
-      // negative token numbers?? just make postive number? easy fix for now
-      // order the transactions newest to oldest
       
       if (preTokenNumber && postTokenNumber && preTokenNumber > postTokenNumber) {
         finalTokenBalanceChange = preTokenNumber - postTokenNumber;
-        // sell
       } else if (preTokenNumber && postTokenNumber && postTokenNumber > preTokenNumber) {
         finalTokenBalanceChange = postTokenNumber - preTokenNumber;
-        // bought
       } else if (preTokenNumber && !postTokenNumber && preTokenNumber === 0) {
         finalTokenBalanceChange = preTokenNumber;
-        // 
       } else if (preTokenNumber && !postTokenNumber) {
         finalTokenBalanceChange = null;
       } else if (!preTokenNumber && postTokenNumber) {
         finalTokenBalanceChange = postTokenNumber;
-        // bought
       } else {
         return null;
       };
@@ -320,23 +210,11 @@ export default function AccountDetails() {
     console.log("done??");}
   }, [data]);
 
-  // This is the function that will just grab the token name and symbol from the api call that returns the metadata of the token based on token id and update the db
-  useEffect(() => {
-    if (tokenNameSymb != undefined) {
-      const tokenName = tokenNameSymb.result.content.metadata.name;
-      const tokensymbol = tokenNameSymb.result.content.metadata.symbol;
-      const tokenId = tokenNameSymb.result.id;
-      window.electron.updateTokenNameSymbol(tokenId, tokenName, tokensymbol);
-      fetchTransactions(); 
-    }
-  }, [tokenNameSymb]);
-
   // This functions prepares the transactions to be stored in the database, based on the info that was taken from the api call and the function that grabbed only the necessary info from the api call (of the transaction)
   const prepareForDb = (transaction) => {
     if (!transaction) {
       return;
     }
-    // token transferred
     const newTransaction = {
       tokenId: transaction.tokenId,
       transactionHash: transaction.transactionHash,
@@ -357,9 +235,6 @@ export default function AccountDetails() {
     const newTransaction = {
       publicKey: publicKey,
       tokenId: transaction.tokenId,
-      // cost: transaction.fromAmount < 0 ? transaction.fromAmount : 0,
-      // profit: transaction.fromAmount > 0 ? transaction.toAmount : 0,
-      // profit: transaction.fromAmount > 0 ? (transaction.fromAmount - transaction.toAmount) : 0
     }
     return newTransaction;
   }
@@ -417,25 +292,6 @@ export default function AccountDetails() {
               <Button sx={{ mt: 2, mb: 2, mr: 2, width:'210px', height: '56px', borderRadius: '10px', borderColor: '#A8E86A', textTransform: 'none', color: '#A8E86A', '&:hover': { borderColor: '#e5f8ce', color: '#e5f8ce'}}} variant="outlined" onClick={fetchDataApiCall}> <UpdateIcon sx={{marginRight: '8px'}} fontSize="small"/> Update Transactions</Button>
             </Grid>
           </Grid>
-          {/* <Grid item xs> */}
-            {/* <Typography variant="h5" gutterBottom align="center" sx={{ color: '#C4B6B6'}}>
-            Account Details Page
-            </Typography> */}
-            {/* <Button
-                onClick={createBatchRequestsTwo}
-                sx={{ width: '100%', height: '26px', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-                  backgroundColor: '#2d2a30'} }}
-              >
-                Get Trans One
-              </Button> */}
-              {/* <Button
-                onClick={deleteRandomOne}
-                sx={{ width: '100%', height: '26px', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-                  backgroundColor: '#2d2a30'} }}
-              >
-                Delete One
-              </Button>  */}
-          {/* </Grid> */}
         </Grid>
         <Box
           justifyContent="center"
@@ -469,21 +325,6 @@ export default function AccountDetails() {
             </Typography>
           </Box>
         </Box>
-        {/* <Grid item>
-          <Card sx={{ backgroundColor: '#5e5a66', color: '#C4B6B6', maxWidth: 800 }}>
-            <CardContent>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body1" sx={{ marginBottom: 2 }}>
-                  Wallet: {publicKey}
-                </Typography>
-                <Divider sx={{ marginY: 1, backgroundColor: '#908d96'}} />
-                <Typography variant="body1" sx={{ marginTop: 2.5 }}>
-                  Total Profit: {accountTotalProfit?.totalProfit ?? 0} SOL
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid> */}
         <Grid item mt={2}>
           <Box sx={{ backgroundColor: '#101010', padding: 2, borderRadius: '16px', overflow: 'auto', width: 900, maxHeight: '500px' }}>
             <Table>
@@ -492,7 +333,6 @@ export default function AccountDetails() {
                   <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', textAlign: 'center' }}>Token</TableCell>
                   <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', textAlign: 'center' }}>Cost</TableCell>
                   <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(0, 0, 0, 0)', textAlign: 'center' }}>Profit</TableCell>
-                  {/* <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)', textAlign: 'center' }}>Action</TableCell> */}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -521,32 +361,6 @@ export default function AccountDetails() {
                         <TrendingUpIcon />{transaction.profit}
                       </Box> 
                     </TableCell>
-                    
-                      {/* <TableCell sx={{ borderBottom: '2px solid rgba(255, 255, 255, 0.07)', height: '42px' }}> */}
-                      {/* {!transaction.tokenName && (
-                        <Button
-                          onClick={() => fetchTokenApiCall(transaction.tokenId)}
-                          sx={{ width: '100%', height: '26px', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-                            backgroundColor: '#2d2a30'} }}
-                        >
-                          Get Token Name
-                        </Button>
-                      )}  */}
-                      {/* <Button
-                          onClick={() => fetchDataApiCallBeforeTransaction(transaction.tokenId)}
-                          sx={{ width: '100%', height: '26px', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-                            backgroundColor: '#2d2a30'} }}
-                        >
-                          Get Trans Before This
-                        </Button> */}
-                        {/* <Button
-                onClick={() => deleteRandomOne(transaction.tokenId)}
-                sx={{ width: '100%', height: '26px', color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-                  backgroundColor: '#2d2a30'} }}
-              >
-                Delete One
-              </Button>  */}
-                      {/* </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>

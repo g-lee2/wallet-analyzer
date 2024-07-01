@@ -260,13 +260,7 @@ ipcMain.handle('add-transaction', async (event, rows) => {
 
       rows.forEach((row) => {
         db.run(
-          // `INSERT INTO account_transactions (publicKey, tokenId, cost, profit) VALUES (?, ?, ?, ?)
-          //   ON CONFLICT(tokenId) DO UPDATE SET
-          //   cost = cost + EXCLUDED.cost,
-          //   profit = profit + EXCLUDED.profit`
           `INSERT INTO account_transactions (publicKey, tokenId) VALUES (?, ?) ON CONFLICT(tokenId) DO NOTHING`,
-          // profit = (cost + (profit + EXCLUDED.profit))
-          // [row.publicKey, row.tokenId, row.cost, row.profit]
           [row.publicKey, row.tokenId],
           (err) => {
             if (err) {
@@ -363,32 +357,6 @@ ipcMain.handle('get-transaction-details', async (event, tokenId) => {
   });
 });
 
-// ipcMain.handle('check-if-transaction-detail-exists', (event, objects) => {
-//   return new Promise((resolve, reject) => {
-//     const transactionHashes = objects.map((obj) => obj.transactionHash); // Extracting IDs from objects
-//     const placeholders = transactionHashes.map(() => '?').join(','); // Creating the placeholder string
-//     const query = `SELECT transactionHash FROM table_table WHERE transactionHash IN (${placeholders})`; // Constructing the query
-
-//     db.all(query, transactionHashes, function (err, rows) {
-//       if (err) {
-//         reject('Error checking existence: ' + err.message);
-//       } else {
-//         const foundTransactionHashes = new Set(rows.map((row) => row.transactionHash)); // Storing found TransactionHashes in a Set
-//         const notFoundObjects = objects.filter(
-//           (obj) => !foundTransactionHashes.has(obj.transactionHash)
-//         ); // Filtering out objects not found
-
-//         resolve(notFoundObjects); // Resolving the promise with the objects not found
-//       }
-//     });
-//   })
-//     .then((notFoundObjects) => {
-//       return notFoundObjects;
-//     })
-//     .catch((error) => {
-//       throw new Error('Error checking existence: ' + error.message);
-//     });
-// });
 ipcMain.handle('check-if-transaction-detail-exists', async (event, rows) => {
   const notFoundRows = [];
 
@@ -488,7 +456,6 @@ ipcMain.handle('get-token-transaction-hash', async (event, tokenId) => {
 
 ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
   const apiKey = process.env.REACT_APP_API_KEY;
-  // const url = `${endpoint}?api-key=${apiKey}`;
   const baseUrl = process.env.REACT_APP_URL;
   const url = baseUrl + apiKey;
   const body = {
@@ -513,7 +480,6 @@ ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
       throw new Error(`HTTP error status: ${response.status}`);
     }
     const data = await response.json();
-    // console.log('Data to send to renderer:', data);
     return data;
   } catch (error) {
     console.error('Failed to fetch data:', error);
@@ -523,7 +489,6 @@ ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
 
 ipcMain.handle('fetch-transaction-data-before', async (event, pubKey, transHash) => {
   const apiKey = process.env.REACT_APP_API_KEY;
-  // const url = `${endpoint}?api-key=${apiKey}`;
   const baseUrl = process.env.REACT_APP_URL;
   const url = baseUrl + apiKey;
   const body = {
@@ -549,7 +514,6 @@ ipcMain.handle('fetch-transaction-data-before', async (event, pubKey, transHash)
       throw new Error(`HTTP error status: ${response.status}`);
     }
     const data = await response.json();
-    // console.log('Data to send to renderer:', data);
     return data;
   } catch (error) {
     console.error('Failed to fetch data:', error);
@@ -568,7 +532,6 @@ ipcMain.handle('fetch-transaction-data-two', async (event, signatures) => {
         { encoding: 'json', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }
       ]
     }));
-    // console.log(batchRequest);
     return batchRequest;
   } catch (error) {
     console.error('Failed to fetch data:', error);
@@ -578,7 +541,6 @@ ipcMain.handle('fetch-transaction-data-two', async (event, signatures) => {
 
 ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
   const apiKey = process.env.REACT_APP_API_KEY;
-  // const url = `${endpoint}?api-key=${apiKey}`;
   const baseUrl = process.env.REACT_APP_URL;
   const url = baseUrl + apiKey;
   try {
@@ -591,7 +553,6 @@ ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
       throw new Error(`HTTP error status: ${response.status}`);
     }
     const data = await response.json();
-    // console.log('Data to send to renderer:', data);
     return data;
   } catch (error) {
     console.error('Failed to fetch data:', error);
@@ -601,7 +562,6 @@ ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
 
 ipcMain.handle('fetch-transaction-data-one', async (event) => {
   const apiKey = process.env.REACT_APP_API_KEY;
-  // const url = `${endpoint}?api-key=${apiKey}`;
   const baseUrl = process.env.REACT_APP_URL;
   const url = baseUrl + apiKey;
   const body = {
@@ -623,7 +583,6 @@ ipcMain.handle('fetch-transaction-data-one', async (event) => {
       throw new Error(`HTTP error status: ${response.status}`);
     }
     const data = await response.json();
-    // console.log('Data to send to renderer:', data);
     return data;
   } catch (error) {
     console.error('Failed to fetch data:', error);
@@ -651,7 +610,6 @@ ipcMain.handle('fetch-transaction-data-four', async (event, batch) => {
           '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
         )
     );
-    // console.log(filteredTransactions);
     return finalFilter;
   } catch (error) {
     console.error('Failed to fetch data:', error);
@@ -687,7 +645,6 @@ ipcMain.handle('fetch-token-data', async (event, token) => {
 });
 
 function createWindow() {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -709,8 +666,6 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
@@ -718,16 +673,9 @@ function createWindow() {
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
@@ -738,20 +686,12 @@ app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Grid, TextField, Button, InputAdornment, Table, TableBody, TableCell,TableContainer,TableHead,TableRow, Paper } from '@mui/material';
+import { Box, Typography, Grid, TextField, Button, InputAdornment, Table, TableBody, TableCell, TableRow} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
 export default function Account() {
@@ -89,14 +89,6 @@ export default function Account() {
           </Grid>
         </Grid>
         <Grid container spacing={2} justifyContent="center" sx={{ marginTop: 4 }}>
-          {/* {accounts.map(account => (
-            <Grid item key={account.id}>
-              <Button sx={{color: '#C4B6B6', backgroundColor:"#46424f", '&:hover': {
-                backgroundColor: '#5e5a66'}}} variant="contained" onClick={() => navigate(`/account-details/${account.publicKey}`)}>
-                  {account.publicKey} - Total: {account.totalProfit}
-              </Button>
-            </Grid>
-          ))} */}
 
       <Table sx={{ width: 600 }} aria-label="simple table">
         <TableBody>
@@ -109,9 +101,6 @@ export default function Account() {
                 backgroundColor: 'rgba(255, 255, 255, 0.07)', cursor: 'pointer'}}} onClick={() => navigate(`/account-details/${account.publicKey}`)}>
                   {account.publicKey.toUpperCase()}
               </TableCell>
-              {/* <TableCell align="right" sx={{color: '#B2F35F', backgroundColor:"#101010" }}>
-                  Total: {account.totalProfit}
-              </TableCell> */}
             </TableRow>
           ))}
         </TableBody>
@@ -122,4 +111,3 @@ export default function Account() {
     </Box>
   );
 }
-

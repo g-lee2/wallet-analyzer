@@ -55,18 +55,12 @@ export default function TransactionDetails() {
                 </Link>
               </Grid>
             </Grid>
-            {/* <Grid item xs>
-              <Typography variant="h5" align="center" sx={{color: '#C4B6B6'}}>Transaction Details Page</Typography>
-            </Grid> */}
           </Grid>
           
           <Grid item alignItems="center">
             <Card sx={{ backgroundColor: 'rgba(0, 0, 0, 0)', color: 'white', width: 800}}>
               <CardContent>
                 <Box sx={{ textAlign: 'center' }}>
-                  {/* <Typography variant="body1" sx={{ marginBottom: 1 }}>
-                    Token:
-                  </Typography> */}
                   <Typography variant="body1" sx={{ marginTop: 1 }}>{tokenName ? tokenName : tokenId}
                   </Typography>
                 </Box>

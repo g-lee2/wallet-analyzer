@@ -8,7 +8,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   typography: {
-    fontFamily: 'Poppins, sans-serif', // Replace with your desired font family
+    fontFamily: 'Poppins, sans-serif', 
   },
 }); 
 
