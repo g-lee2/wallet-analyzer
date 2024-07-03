@@ -19,35 +19,33 @@ A desktop application built with React, Electron, Vite, and SQLite3 for analyzin
 
 ### Prerequisites
 
-- Node.js (version 14.x or later)
+- Latest version of Node.js (version 18.x or later)
+- Latest version of npm (version 9.x or later)
 - Access to a private RPC endpoint
 
 - Clone this repository to your desktop:
 
 ```
-    $ git clone https://github.com/g-lee2/wallet-analyzer.git
-
+    git clone https://github.com/g-lee2/wallet-analyzer.git
+    cd wallet-analyzer
 ```
 
 - Install all dependencies:
 
 ```
     npm install
-
 ```
 
-- Build the application :
+- Build the application:
 
 ```
     npm run build
-
 ```
 
-- Start the application :
+- Start the application:
 
 ```
     npm run start
-
 ```
 
 ## Configuration
@@ -57,8 +55,8 @@ A desktop application built with React, Electron, Vite, and SQLite3 for analyzin
 Create a .env file in the root of your project and add the following:
 
 ```
-    VITE_RPC_URL=your-rpc-url
-    VITE_API_KEY=your-api-key
+    REACT_APP_URL=your-rpc-url
+    REACT_APP_API_KEY=your-api-key
 ```
 
 ## Known Bugs
@@ -87,4 +85,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Copyright (c) _2023_ _Grace Lee_
+Copyright (c) _2024_ _Grace Lee_
