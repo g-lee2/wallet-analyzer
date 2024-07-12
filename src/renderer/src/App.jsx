@@ -1,7 +1,7 @@
 import Account from "./views/Account";
 import AccountDetails from "./views/AccountDetails";
 import TransactionDetails from "./views/TransactionDetails";
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 
 function App() {
   return (
