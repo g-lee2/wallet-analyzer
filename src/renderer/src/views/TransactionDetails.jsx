@@ -22,14 +22,16 @@ export default function TransactionDetails() {
   const [transactionDetailList, setTransactionDetailList] = useState([]);
   const [tokenName, setTokenName] = useState('');
 
+  // This function gets all transaction details from db
   const fetchTransactionDetailList = async () => {
-    const fetchedTransactionDetails = await window.electron.getTransactionDetails(tokenId);  // Call the getTransactionDetails function exposed by preload.js
+    const fetchedTransactionDetails = await window.electron.getTransactionDetails(tokenId);  
     setTransactionDetailList(fetchedTransactionDetails);  // Update the transaction state with the fetched transaction details in a list form
   };
 
+  // This function gets the token name for a specific token
   const fetchTokenName = async () => {
-    const fetchedTokenName = await window.electron.getAccountTokenName(tokenId);  // Call the getTransactionDetails function exposed by preload.js
-    setTokenName(fetchedTokenName.tokenName);  // Update the transaction state with the fetched transaction details in a list form
+    const fetchedTokenName = await window.electron.getAccountTokenName(tokenId);  
+    setTokenName(fetchedTokenName.tokenName);  // Update the tokenName state with Token Name based on the tokenId
   };
 
   // useEffect to fetch transaction details when the component mounts
@@ -37,8 +39,6 @@ export default function TransactionDetails() {
     fetchTransactionDetailList(tokenId); 
     fetchTokenName(tokenId);
   }, []);
-
-  // const transactions = transactionDetailList.sort((a, b) => new Date(a.date) - new Date(b.date));
 
   return (
     <>

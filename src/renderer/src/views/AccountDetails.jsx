@@ -34,19 +34,19 @@ export default function AccountDetails() {
     // Convert to milliseconds
     const date = new Date(timestamp * 1000);
   
-    // Options for formatting the date and time
+    // Formatting the date and time to PST timezone and 12 hour format
     const options = {
-      timeZone: 'America/Los_Angeles', // PST timezone
+      timeZone: 'America/Los_Angeles', 
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: true, // 12-hour format
+      hour12: true,
     };
   
-    // Format the date
+    // Format the date to be readable for US users
     const readableDate = new Intl.DateTimeFormat('en-US', options).format(date);
   
     return readableDate;
@@ -63,7 +63,7 @@ export default function AccountDetails() {
     await window.electron.updateCostProfit();
     await window.electron.sumAndUpdateTotalProfit(publicKey);
     const fetchedAccount = await window.electron.getAccountTotalProfit(publicKey);  // Call the getAccountTotalProfit function exposed by preload.js
-    setAccountTotalProfit(fetchedAccount);  // Update the accounts state with the fetched account's total profit
+    setAccountTotalProfit(fetchedAccount);  // Update the accounts state with the fetched total profit
   };
 
   const fetchTransactions = async () => {
@@ -76,7 +76,7 @@ export default function AccountDetails() {
     fetchTransactions(); 
   }, []);
 
-  // this function gets the signatures for a specific public key, then grabs just the signature from the json response, and calls the function that will sort those into an array of JSON-RPC request objects
+  // This function gets the signatures for a specific public key, then grabs just the signature hashes from the json response, and calls the function that will sort those into an array of JSON-RPC request objects
   const fetchDataApiCall = async () => {
     window.electron.fetchTransactionData(publicKey)
     .then(data => {
@@ -92,7 +92,7 @@ export default function AccountDetails() {
     });
   };
 
-  // this is the function that will sort those signatures into an array of JSON-RPC request objects
+  // This function will sort the fetched signature hashes into an array of JSON-RPC request objects
   const createBatchRequests = async (signs) => {
     window.electron.fetchTransactionDataTwo(signs).then(data => {
       if (!data) {
@@ -106,7 +106,7 @@ export default function AccountDetails() {
     });
   }
 
-  // this is the function that make a request to get transaction metadata for each signature in the array of JSON-RPC request object
+  // This function makes a request to get transaction metadata for each signature in the array of JSON-RPC request object
   const makeBatchRequest = async (batch) => {
     window.electron.fetchTransactionDataThree(batch).then(data => {
       if (!data) {
@@ -134,18 +134,18 @@ export default function AccountDetails() {
     });
   }
 
-  // Function to handle saving transaction as an array of objects in state when the button is clicked and it takes only necessary information from each transaction doesn't save to the db though, it needs to be prepared 
+  // Function to handle saving transaction as an array of objects, when the button is clicked. It takes only necessary information from each transaction
   useEffect(() => {
-    console.log("here");
-    console.log(data.length);
     if (data.length > 0)
     {const filteredItems = data.map(({ result: {blockTime, meta: { postBalances, postTokenBalances, preBalances, preTokenBalances}, transaction: {signatures, message: { accountKeys }} } }) => {
       const indexOfOwner = accountKeys.indexOf(publicKey);
 
+      // Filtering out transactions that aren't involved with pump.fun
       const isRaydiumInvolved = accountKeys.includes('So11111111111111111111111111111111111111112'
       ) || accountKeys.includes('5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'
       ) || accountKeys.includes('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
 
+      // Getting the token id based on wallet public key
       const foundId = preTokenBalances.length > 0 ? preTokenBalances.map(item => {
         if (item.owner === publicKey) {
           return item.mint; 
@@ -156,6 +156,7 @@ export default function AccountDetails() {
         }
       }).filter(item => item !== undefined);
 
+      // Getting the token id based on wallet public key
       const foundIdTwo = postTokenBalances.length > 0 ? postTokenBalances.map(item => {
         if (item.owner === publicKey) {
           return item.mint; 
@@ -166,11 +167,14 @@ export default function AccountDetails() {
         }
       }).filter(item => item !== undefined);
 
+      // Getting the token balance after the transaction went through based on the wallet owner
       const postTokenNumber = postTokenBalances.length > 0 && postTokenBalances.map(item => {
         if (item.owner === publicKey) {
           return parseInt(item.uiTokenAmount.uiAmountString)
         }
       }).filter(item => item !== undefined);
+
+      // Getting the token balance before the transaction when through based on the wallet owner
       const preTokenNumber = preTokenBalances.length > 0 && preTokenBalances.map(item => {
         if (item.owner === publicKey) {
           return parseInt(item.uiTokenAmount.uiAmountString)
@@ -179,6 +183,7 @@ export default function AccountDetails() {
       
       let finalTokenBalanceChange = null;
       
+      // Checks if the wallet owner bought or sold the token based on the preTokenNumber and postTokenNumber, and then calculates the difference between the two to figure out how many were bought or sold
       if (preTokenNumber && postTokenNumber && preTokenNumber > postTokenNumber) {
         finalTokenBalanceChange = preTokenNumber - postTokenNumber;
       } else if (preTokenNumber && postTokenNumber && postTokenNumber > preTokenNumber) {
@@ -200,17 +205,16 @@ export default function AccountDetails() {
         tokenId: foundId[0] ? foundId[0] : foundIdTwo[0],
         accountBalanceChange: changeToSol(postBalances[indexOfOwner] - preBalances[indexOfOwner])
     }}); 
-    // filter out ones that don't have postTokenBalances?
+    // filter out transactions that aren't related to pump.fun
     const firstFilter = filteredItems.filter((item) => item != null);
     const secondFilter = firstFilter.filter((item) => item.tokenId != 'So11111111111111111111111111111111111111112');
     const finalFilter = secondFilter.filter((item) => item.tokenTransferred !== null);
-    // const finalFinalFilter = finalFilter.filter((item) => item.tokenId !== undefined);
+
     setTransactionsFromApi([...transactionsFromApi, ...finalFilter]);
-    // console.log(finalFilter);
     console.log("done??");}
   }, [data]);
 
-  // This functions prepares the transactions to be stored in the database, based on the info that was taken from the api call and the function that grabbed only the necessary info from the api call (of the transaction)
+  // This functions prepares the transactions to be stored in the database
   const prepareForDb = (transaction) => {
     if (!transaction) {
       return;
@@ -227,7 +231,7 @@ export default function AccountDetails() {
     return newTransaction;
   }
 
-  // This function further dissects/prepares the transaction info, this will be stored in a different table in the db
+  // This function further formats the transaction info, this will be stored in the account_transactions table in the db
   const prepareTransactionDetailForDb = (transaction) => {
     if (!transaction) {
       return;
@@ -239,13 +243,13 @@ export default function AccountDetails() {
     return newTransaction;
   }
 
-  // This is the function that will now get the transactions from the api and calls the function that will prepare it for the db
+  // This is the function that will now get the transactions from the rpc call and calls the function that will prepare/format it for the db
   useEffect(() =>{
     const response = transactionsFromApi.map(prepareForDb);
     setTransactionUpdateAfterApi(response);
   }, [transactionsFromApi]);
 
-  // This is the function now that will check to see if a transaction exists in the db and if it doesn't sets the state that will trigger the useEffect that will add transactions to the db
+  // This is the function checks to see if a transaction exists in the transaction_detail table and if it doesn't sets the state that will trigger the useEffect that will add transactions to the db
   useEffect(() => {
     window.electron.checkIfTransactionDetailExists(transactionUpdateAfterApi).then((notFoundRows) => {
       setPreTransactionDetailUpdate(notFoundRows);
@@ -253,7 +257,7 @@ export default function AccountDetails() {
     });
   }, [transactionUpdateAfterApi]);
 
-  // This functions finally adds the transactions that were prepared after the api call to the db and then prepares it again to be stored in a different table in the db
+  // This functions finally adds the transactions that were prepared after the api call to the transaction_detail table in the db and then calls the function that will reformat the data again to be stored in the account_transactions table in the db
   useEffect(() => {
     if (preTransactionDetailUpdate.length > 0) {
       window.electron.addTransactionDetail(preTransactionDetailUpdate);
@@ -262,7 +266,7 @@ export default function AccountDetails() {
     }
   }, [preTransactionDetailUpdate]);
 
-  // This functions finally adds the transactions to that other table in the db and refetches the info from the db to be displayed to the user
+  // This functions finally adds the transactions to the account_transactions table in the db and refetches the info from the db to be displayed to the user
   useEffect(() => {
     window.electron.addTransaction(transactionDetailUpdate)
     .then(() => {
@@ -271,6 +275,7 @@ export default function AccountDetails() {
     });
   }, [transactionDetailUpdate]);
 
+  // When the transaction hash is clicked, user will be redirected to the corresponding transaction detail page
   const handleOnClick = (transactionId) => {
     navigate(`/account-details/${publicKey}/transaction/${transactionId}`);
   }

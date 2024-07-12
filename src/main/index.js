@@ -105,10 +105,9 @@ ipcMain.handle('get-account-total-profit', async (event, publicKey) => {
 
 ipcMain.handle('sum-and-update-total-profit', async (event, publicKey) => {
   try {
-    // Step 1: Sum all prop1 and prop3 values related to this publicKey in table1
+    // Step 1: Sum all profit and cost values related to this publicKey in the account_transactions table
     const totalProfit = await new Promise((resolve, reject) => {
       db.get(
-        // SELECT SUM(profit) AS totalProfit FROM account_transactions WHERE publicKey = ?'
         'SELECT SUM(profit) AS totalProfit, SUM(cost) AS totalCost FROM account_transactions WHERE publicKey = ?',
         [publicKey],
         (err, row) => {
@@ -116,14 +115,13 @@ ipcMain.handle('sum-and-update-total-profit', async (event, publicKey) => {
             reject('Error fetching profit and cost sums: ' + err.message);
           } else {
             const total = (row ? row.totalProfit : 0) + (row ? row.totalCost : 0);
-            // const total = row ? row.totalProfit : 0;
             resolve(total);
           }
         }
       );
     });
 
-    // Step 2: Update prop2 with the calculated sum in table2
+    // Step 2: Update totalProfit with the calculated sum in the account table
     await new Promise((resolve, reject) => {
       db.run(
         'UPDATE account SET totalProfit = ? WHERE publicKey = ?',
@@ -148,7 +146,7 @@ ipcMain.handle('sum-and-update-total-profit', async (event, publicKey) => {
 
 ipcMain.handle('sum-and-update-cost-profit', async (event, all) => {
   try {
-    // Step 1: Sum all prop1 and prop3 values related to this publicKey in table1
+    // Step 1: Sum all profit and cost values related to this publicKey in account_transactions
     const totalProfit = await new Promise((resolve, reject) => {
       db.get(
         // SELECT SUM(profit) AS totalProfit FROM account_transactions WHERE publicKey = ?'
@@ -159,14 +157,13 @@ ipcMain.handle('sum-and-update-cost-profit', async (event, all) => {
             reject('Error fetching profit and cost sums: ' + err.message);
           } else {
             const total = (row ? row.totalProfit : 0) + (row ? row.totalCost : 0);
-            // const total = row ? row.totalProfit : 0;
             resolve(total);
           }
         }
       );
     });
 
-    // Step 2: Update prop2 with the calculated sum in table2
+    // Step 2: Update totalProfit with the calculated sum in the account table
     await new Promise((resolve, reject) => {
       db.run(
         'UPDATE account SET totalProfit = ? WHERE publicKey = ?',
@@ -237,6 +234,7 @@ ipcMain.handle('update-cost-profit', async () => {
   });
 });
 
+// Handle IPC call for retrieving transaction id from the account_transactions table
 ipcMain.handle('get-transaction-id', async (event, tokenId) => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -253,6 +251,7 @@ ipcMain.handle('get-transaction-id', async (event, tokenId) => {
   });
 });
 
+// Handle IPC call for retrieving adding transactions to the account_transactions table
 ipcMain.handle('add-transaction', async (event, rows) => {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
@@ -298,6 +297,7 @@ ipcMain.handle('get-transactions', async (event, publicKey) => {
   });
 });
 
+// Handle IPC call for add transaction details
 ipcMain.handle('add-transaction-detail', (event, rows) => {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
@@ -357,6 +357,7 @@ ipcMain.handle('get-transaction-details', async (event, tokenId) => {
   });
 });
 
+// Handle IPC call for checking if a transaction exists in the db already
 ipcMain.handle('check-if-transaction-detail-exists', async (event, rows) => {
   const notFoundRows = [];
 
@@ -438,6 +439,7 @@ ipcMain.handle('get-account-token-name', async (event, tokenId) => {
   });
 });
 
+// Handle IPC call for retrieving one transaction hash
 ipcMain.handle('get-token-transaction-hash', async (event, tokenId) => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -454,6 +456,7 @@ ipcMain.handle('get-token-transaction-hash', async (event, tokenId) => {
   });
 });
 
+// Handle IPC call for fetching all transactions via a Solana RPC
 ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
   const apiKey = process.env.REACT_APP_API_KEY;
   const baseUrl = process.env.REACT_APP_URL;
@@ -487,6 +490,7 @@ ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
   }
 });
 
+// Handle IPC call for fetching all transactions prior to a specific transaction
 ipcMain.handle('fetch-transaction-data-before', async (event, pubKey, transHash) => {
   const apiKey = process.env.REACT_APP_API_KEY;
   const baseUrl = process.env.REACT_APP_URL;
@@ -521,6 +525,7 @@ ipcMain.handle('fetch-transaction-data-before', async (event, pubKey, transHash)
   }
 });
 
+// Handle IPC call for creating batch requests
 ipcMain.handle('fetch-transaction-data-two', async (event, signatures) => {
   try {
     const batchRequest = signatures.map((signature, index) => ({
@@ -539,6 +544,7 @@ ipcMain.handle('fetch-transaction-data-two', async (event, signatures) => {
   }
 });
 
+// Handle IPC call for fetching all transactions via a Solana RPC
 ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
   const apiKey = process.env.REACT_APP_API_KEY;
   const baseUrl = process.env.REACT_APP_URL;
@@ -560,6 +566,7 @@ ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
   }
 });
 
+// Handle IPC call for fetching one transaction via a Solana RPC
 ipcMain.handle('fetch-transaction-data-one', async (event) => {
   const apiKey = process.env.REACT_APP_API_KEY;
   const baseUrl = process.env.REACT_APP_URL;
@@ -590,6 +597,7 @@ ipcMain.handle('fetch-transaction-data-one', async (event) => {
   }
 });
 
+// Handle IPC call for filtering transactions that aren't related to pump.fun
 ipcMain.handle('fetch-transaction-data-four', async (event, batch) => {
   try {
     const filteredTransactions = await batch.filter(

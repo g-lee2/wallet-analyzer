@@ -10,7 +10,7 @@ export default function Account() {
   // State to store the list of accounts fetched from the database
   const [accounts, setAccounts] = useState([]);
 
-  // Function to handle adding a user when the button is clicked
+  // Function to handle adding a new wallet when the button is clicked
   const handleAddAccount = async () => {
     try {
       const accountExists = await window.electron.checkAccountExists(publicKey);
@@ -45,7 +45,7 @@ export default function Account() {
     display="flex"
     justifyContent="center"
     alignItems="center"
-    sx={{ width: '100vw', height: '100vh' }} // This sets the parent Box to take the full viewport width and height
+    sx={{ width: '100vw', height: '100vh' }} 
   >
       <Box sx={{ textAlign: 'center', flexDirection: 'column', alignItems:'center', justifyContent: 'center', display: 'flex', backgroundColor: '#101010', borderRadius: '16px', minWidth: '841px', minHeight: '537px' }}>
         <Typography variant="h4" component="h1" gutterBottom sx={{color: '#FFFFFF'}}>
