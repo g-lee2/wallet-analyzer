@@ -13,7 +13,7 @@ A desktop application built with React, Electron, Vite, and SQLite3 for analyzin
 - _Vite_
 - _Material UI_
 - _SQLite3_
-- _Solana RPC_
+- _Solana RPC (using a private node)_
 
 ## Setup/Installation Requirements
 

@@ -544,7 +544,7 @@ ipcMain.handle('fetch-transaction-data-two', async (event, signatures) => {
   }
 });
 
-// Handle IPC call for fetching all transactions via a Solana RPC
+// Handle IPC call for fetching all transactions via a Solana RPC call
 ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
   const apiKey = process.env.REACT_APP_API_KEY;
   const baseUrl = process.env.REACT_APP_URL;
@@ -566,7 +566,7 @@ ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
   }
 });
 
-// Handle IPC call for fetching one transaction via a Solana RPC
+// Handle IPC call for fetching one transaction via a Solana RPC call
 ipcMain.handle('fetch-transaction-data-one', async (event) => {
   const apiKey = process.env.REACT_APP_API_KEY;
   const baseUrl = process.env.REACT_APP_URL;
