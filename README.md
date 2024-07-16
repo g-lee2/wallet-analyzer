@@ -13,7 +13,7 @@ A desktop application built with React, Electron, Vite, and SQLite3 for analyzin
 - _Vite_
 - _Material UI_
 - _SQLite3_
-- _Solana RPC (using a private node)_
+- _Helius API_
 
 ## Setup/Installation Requirements
 
@@ -21,7 +21,7 @@ A desktop application built with React, Electron, Vite, and SQLite3 for analyzin
 
 - Latest version of Node.js (version 18.x or later)
 - Latest version of npm (version 9.x or later)
-- Access to a private RPC endpoint
+- To get your API key, please [sign up for a Helius account](https://dev.helius.xyz/dashboard/app)
 
 - Clone this repository to your desktop:
 
@@ -32,31 +32,30 @@ $ cd wallet-analyzer
 
 - Install all dependencies:
 
-```properties
-    npm install
+```console
+$ npm install
 ```
 
 - Build the application:
 
 ```console
-    npm run build
+$ npm run build
 ```
 
 - Start the application:
 
-```shell
-    npm run start
+```console
+$ npm run start
 ```
 
 ## Configuration
 
 ### Environment Variables
 
-Create a .env file in the root of your project and add the following:
+Create a .env file in the root of your project and add the following environment variables with your own API key:
 
 ```
-    REACT_APP_URL=
-    REACT_APP_API_KEY=
+REACT_APP_API_KEY=<API-KEY>
 ```
 
 ## Known Bugs
