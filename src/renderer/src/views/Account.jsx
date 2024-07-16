@@ -5,17 +5,17 @@ import SearchIcon from '@mui/icons-material/Search';
 
 export default function Account() {
   const navigate = useNavigate();
-  // State to store the input value for public key
+  // State to store the input value for public key.
   const [publicKey, setPublicKey] = useState('');
-  // State to store the list of accounts fetched from the database
+  // State to store the list of accounts fetched from the database.
   const [accounts, setAccounts] = useState([]);
 
-  // Function to handle adding a new wallet when the button is clicked
+  // Function to handle adding a new wallet when the button is clicked.
   const handleAddAccount = async () => {
     try {
       const accountExists = await window.electron.checkAccountExists(publicKey);
       if (!accountExists) {
-        // Call the addAccount function exposed by preload.js
+        // Calls the addAccount function exposed by preload.js.
           await window.electron.addAccount(publicKey);
           navigate(`/account-details/${publicKey}`);
       } else {
@@ -25,17 +25,17 @@ export default function Account() {
   } catch (error) {
       console.error("Error in IPC call:", error);
   }
-    setPublicKey("");  // Reset the input field
-    await fetchAccounts();  // Refetch the list of accounts to update the UI
+    setPublicKey("");  // Reset the input field.
+    await fetchAccounts();  // Refetch the list of accounts to update the UI.
   };
 
-  // Function to fetch all accounts from the database
+  // Function to fetch all accounts from the database.
   const fetchAccounts = async () => {
-    const fetchedAccounts = await window.electron.getAccounts();  // Call the getAccounts function exposed by preload.js
-    setAccounts(fetchedAccounts);  // Update the accounts state with the fetched accounts
+    const fetchedAccounts = await window.electron.getAccounts();  // Calls the getAccounts function exposed by preload.js.
+    setAccounts(fetchedAccounts);  // Updates the accounts state with the fetched accounts.
   };
 
-  // useEffect to fetch accounts when the component mounts
+  // useEffect to fetch accounts when the component mounts.
   useEffect(() => {
     fetchAccounts();  
   }, []);
