@@ -19,33 +19,41 @@ A desktop application built with React, Electron, Vite, and SQLite3 for analyzin
 
 ### Prerequisites
 
-- Latest version of Node.js (version 18.x or later)
-- Latest version of npm (version 9.x or later)
+|                                                       Node.js and npm Versions                                                        |
+| :-----------------------------------------------------------------------------------------------------------------------------------: |
+| ![Node.js version](https://img.shields.io/badge/node-%3E%3D18.x-blue) ![npm version](https://img.shields.io/badge/npm-%3E%3D9.x-blue) |
+|                                 (version 18.x or later for Node.js and version 9.x or later for npm)                                  |
+
 - To get your API key, please [sign up for a Helius account](https://dev.helius.xyz/dashboard/app)
 
 - Clone this repository to your desktop:
 
 ```console
-$ git clone https://github.com/g-lee2/wallet-analyzer.git
-$ cd wallet-analyzer
+git clone https://github.com/g-lee2/wallet-analyzer.git
+```
+
+- Navigate to the project directory:
+
+```console
+cd wallet-analyzer
 ```
 
 - Install all dependencies:
 
 ```console
-$ npm install
+npm install
 ```
 
 - Build the application:
 
 ```console
-$ npm run build
+npm run build
 ```
 
 - Start the application:
 
 ```console
-$ npm run start
+npm run start
 ```
 
 ## Configuration
