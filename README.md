@@ -25,26 +25,26 @@ A desktop application built with React, Electron, Vite, and SQLite3 for analyzin
 
 - Clone this repository to your desktop:
 
-```
-    git clone https://github.com/g-lee2/wallet-analyzer.git
-    cd wallet-analyzer
+```console
+$ git clone https://github.com/g-lee2/wallet-analyzer.git
+$ cd wallet-analyzer
 ```
 
 - Install all dependencies:
 
-```
+```properties
     npm install
 ```
 
 - Build the application:
 
-```
+```console
     npm run build
 ```
 
 - Start the application:
 
-```
+```shell
     npm run start
 ```
 
@@ -55,8 +55,8 @@ A desktop application built with React, Electron, Vite, and SQLite3 for analyzin
 Create a .env file in the root of your project and add the following:
 
 ```
-    REACT_APP_URL=your-rpc-url
-    REACT_APP_API_KEY=your-api-key
+    REACT_APP_URL=
+    REACT_APP_API_KEY=
 ```
 
 ## Known Bugs
