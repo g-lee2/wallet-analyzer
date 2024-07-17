@@ -37,7 +37,7 @@ const api = {
     ipcRenderer.invoke('check-if-transaction-detail-exists', rows),
 
   // Function to fetches all transactions based on public key
-  fetchTransactionData: (pubKey) => ipcRenderer.invoke('fetch-transaction-data', pubKey),
+  fetchTransactionData: (endpoint) => ipcRenderer.invoke('fetch-transaction-data', endpoint),
 
   // Function to retrieve transaction hashes
   getTokenTransactionHash: (tokenId) => ipcRenderer.invoke('get-token-transaction-hash', tokenId),

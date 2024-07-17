@@ -357,7 +357,7 @@ ipcMain.handle('get-token-transaction-hash', async (event, tokenId) => {
 });
 
 // Handle IPC call for fetching all transactions via a Solana RPC
-ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
+ipcMain.handle('fetch-transaction-data', async (event, endpoint) => {
   const apiKey = process.env.REACT_APP_API_KEY;
   const url = `${endpoint}?api-key=${apiKey}&limit=10`;
   try {
