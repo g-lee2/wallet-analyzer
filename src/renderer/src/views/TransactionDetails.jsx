@@ -20,24 +20,16 @@ export default function TransactionDetails() {
   let {tokenId} = useParams();
   const navigate = useNavigate();
   const [transactionDetailList, setTransactionDetailList] = useState([]);
-  const [tokenName, setTokenName] = useState('');
 
-  // This function gets all transaction details from db
+  // This function gets all transaction details from db.
   const fetchTransactionDetailList = async () => {
     const fetchedTransactionDetails = await window.electron.getTransactionDetails(tokenId);  
-    setTransactionDetailList(fetchedTransactionDetails);  // Update the transaction state with the fetched transaction details in a list form
+    setTransactionDetailList(fetchedTransactionDetails);  // Updates the transaction state with the fetched transaction details in a list form.
   };
 
-  // This function gets the token name for a specific token
-  const fetchTokenName = async () => {
-    const fetchedTokenName = await window.electron.getAccountTokenName(tokenId);  
-    setTokenName(fetchedTokenName.tokenName);  // Update the tokenName state with Token Name based on the tokenId
-  };
-
-  // useEffect to fetch transaction details when the component mounts
+  // useEffect to fetch transaction details when the component mounts.
   useEffect(() => {
     fetchTransactionDetailList(tokenId); 
-    fetchTokenName(tokenId);
   }, []);
 
   return (
@@ -61,7 +53,7 @@ export default function TransactionDetails() {
             <Card sx={{ backgroundColor: 'rgba(0, 0, 0, 0)', color: 'white', width: 800}}>
               <CardContent>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="body1" sx={{ marginTop: 1 }}>{tokenName ? tokenName : tokenId}
+                  <Typography variant="body1" sx={{ marginTop: 1 }}>{tokenId}
                   </Typography>
                 </Box>
               </CardContent>
@@ -93,7 +85,7 @@ export default function TransactionDetails() {
                   textOverflow: 'ellipsis', maxWidth: '275px' }}>{Math.abs(transactionDetail.fromAmount)}  </TableCell>
                       <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.fromToken === 'SOL' ? transactionDetail.fromToken : (transactionDetail.tokenName ? transactionDetail.tokenName : 'Token')}</TableCell>
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.fromToken === 'SOL' ? transactionDetail.fromToken : 'Token'}</TableCell>
                       <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis', maxWidth: '275px' }}>{'>'}</TableCell>
@@ -102,7 +94,7 @@ export default function TransactionDetails() {
                   textOverflow: 'ellipsis', maxWidth: '275px' }}>{Math.abs(transactionDetail.toAmount)} </TableCell>
                       <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)',whiteSpace: 'nowrap',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.toToken === 'SOL' ? transactionDetail.toToken : (transactionDetail.tokenName ? transactionDetail.tokenName : 'Token')}</TableCell>
+                  textOverflow: 'ellipsis', maxWidth: '275px' }}>{transactionDetail.toToken === 'SOL' ? transactionDetail.toToken : 'Token'}</TableCell>
                       <TableCell sx={{ color: 'white', borderBottom: '2px solid rgba(255, 255, 255, 0.07)', whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '150px', textAlign: 'center' }}>{transactionDetail.time} PST</TableCell>
                     </TableRow>
                   ))}

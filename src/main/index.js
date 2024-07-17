@@ -25,8 +25,6 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
       transactionId INTEGER PRIMARY KEY AUTOINCREMENT, 
       publicKey TEXT, 
       tokenId TEXT UNIQUE,
-      tokenName TEXT,
-      tokenSymbol TEXT,
       cost DOUBLE,
       profit DOUBLE,
       FOREIGN KEY (publicKey) REFERENCES account (publicKey)
@@ -35,8 +33,6 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
     db.run(`CREATE TABLE IF NOT EXISTS transaction_detail (
       transactionDetailId INTEGER PRIMARY KEY AUTOINCREMENT,
       tokenId TEXT, 
-      tokenName TEXT,
-      tokenSymbol TEXT,
       transactionHash TEXT UNIQUE,
       fromToken TEXT,
       fromAmount DOUBLE,
@@ -135,50 +131,6 @@ ipcMain.handle('sum-and-update-total-profit', async (event, publicKey) => {
         }
       );
     });
-
-    console.log('Successfully updated totalProfit for publicKey:', publicKey);
-    return 'Success';
-  } catch (error) {
-    console.error(error);
-    throw new Error('Error processing the request: ' + error.message);
-  }
-});
-
-ipcMain.handle('sum-and-update-cost-profit', async (event, all) => {
-  try {
-    // Step 1: Sum all profit and cost values related to this publicKey in account_transactions
-    const totalProfit = await new Promise((resolve, reject) => {
-      db.get(
-        // SELECT SUM(profit) AS totalProfit FROM account_transactions WHERE publicKey = ?'
-        'SELECT SUM(profit) AS totalProfit, SUM(cost) AS totalCost FROM account_transactions WHERE publicKey = ?',
-        [publicKey],
-        (err, row) => {
-          if (err) {
-            reject('Error fetching profit and cost sums: ' + err.message);
-          } else {
-            const total = (row ? row.totalProfit : 0) + (row ? row.totalCost : 0);
-            resolve(total);
-          }
-        }
-      );
-    });
-
-    // Step 2: Update totalProfit with the calculated sum in the account table
-    await new Promise((resolve, reject) => {
-      db.run(
-        'UPDATE account SET totalProfit = ? WHERE publicKey = ?',
-        [totalProfit, publicKey],
-        function (err) {
-          if (err) {
-            reject('Error updating prop2: ' + err.message);
-          } else {
-            resolve();
-          }
-        }
-      );
-    });
-
-    console.log('Successfully updated totalProfit for publicKey:', publicKey);
     return 'Success';
   } catch (error) {
     console.error(error);
@@ -387,58 +339,6 @@ ipcMain.handle('check-if-transaction-detail-exists', async (event, rows) => {
   return notFoundRows;
 });
 
-ipcMain.handle('update-token-name-symbol', async (event, tokenId, tokenName, tokenSymbol) => {
-  try {
-    // Step 1: Update prop1 and prop2 in table1
-    await new Promise((resolve, reject) => {
-      db.run(
-        'UPDATE account_transactions SET tokenName = ?, tokenSymbol = ? WHERE tokenId = ?',
-        [tokenName, tokenSymbol, tokenId],
-        function (err) {
-          if (err) {
-            reject('Error updating account_transactions: ' + err.message);
-          } else {
-            resolve();
-          }
-        }
-      );
-    });
-
-    // Step 2: Update prop1 and prop2 in table2
-    await new Promise((resolve, reject) => {
-      db.run(
-        'UPDATE transaction_detail SET tokenName = ?, tokenSymbol = ? WHERE tokenId = ?',
-        [tokenName, tokenSymbol, tokenId],
-        function (err) {
-          if (err) {
-            reject('Error updating transaction_detail: ' + err.message);
-          } else {
-            resolve();
-          }
-        }
-      );
-    });
-
-    console.log(`Successfully updated tokenName and tokenSymbol for tokenId: ${tokenId}`);
-    return 'Success';
-  } catch (error) {
-    console.error(error);
-    return { error: 'Error processing the request: ' + error.message };
-  }
-});
-
-ipcMain.handle('get-account-token-name', async (event, tokenId) => {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT tokenName FROM transaction_detail WHERE tokenId = ?', [tokenId], (err, row) => {
-      if (err) {
-        reject(new Error('Failed to retrieve account from the database: ' + err.message));
-      } else {
-        resolve(row);
-      }
-    });
-  });
-});
-
 // Handle IPC call for retrieving one transaction hash
 ipcMain.handle('get-token-transaction-hash', async (event, tokenId) => {
   return new Promise((resolve, reject) => {
@@ -457,192 +357,11 @@ ipcMain.handle('get-token-transaction-hash', async (event, tokenId) => {
 });
 
 // Handle IPC call for fetching all transactions via a Solana RPC
-ipcMain.handle('fetch-transaction-data', async (event, pubKey) => {
+ipcMain.handle('fetch-transaction-data', async (event, endpoint) => {
   const apiKey = process.env.REACT_APP_API_KEY;
-  const baseUrl = process.env.REACT_APP_URL;
-  const url = baseUrl + apiKey;
-  const body = {
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'getSignaturesForAddress',
-    params: [
-      `${pubKey}`,
-      {
-        limit: 20,
-        commitment: 'confirmed'
-      }
-    ]
-  };
+  const url = `${endpoint}?api-key=${apiKey}&limit=10`;
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch data:', error);
-    return { error: error.message };
-  }
-});
-
-// Handle IPC call for fetching all transactions prior to a specific transaction
-ipcMain.handle('fetch-transaction-data-before', async (event, pubKey, transHash) => {
-  const apiKey = process.env.REACT_APP_API_KEY;
-  const baseUrl = process.env.REACT_APP_URL;
-  const url = baseUrl + apiKey;
-  const body = {
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'getSignaturesForAddress',
-    params: [
-      `${pubKey}`,
-      {
-        limit: 800,
-        commitment: 'confirmed',
-        before: `${transHash}`
-      }
-    ]
-  };
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch data:', error);
-    return { error: error.message };
-  }
-});
-
-// Handle IPC call for creating batch requests
-ipcMain.handle('fetch-transaction-data-two', async (event, signatures) => {
-  try {
-    const batchRequest = signatures.map((signature, index) => ({
-      jsonrpc: '2.0',
-      id: index + 1,
-      method: 'getTransaction',
-      params: [
-        signature,
-        { encoding: 'json', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }
-      ]
-    }));
-    return batchRequest;
-  } catch (error) {
-    console.error('Failed to fetch data:', error);
-    return { error: error.message };
-  }
-});
-
-// Handle IPC call for fetching all transactions via a Solana RPC call
-ipcMain.handle('fetch-transaction-data-three', async (event, batch) => {
-  const apiKey = process.env.REACT_APP_API_KEY;
-  const baseUrl = process.env.REACT_APP_URL;
-  const url = baseUrl + apiKey;
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(batch)
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch data:', error);
-    return { error: error.message };
-  }
-});
-
-// Handle IPC call for fetching one transaction via a Solana RPC call
-ipcMain.handle('fetch-transaction-data-one', async (event) => {
-  const apiKey = process.env.REACT_APP_API_KEY;
-  const baseUrl = process.env.REACT_APP_URL;
-  const url = baseUrl + apiKey;
-  const body = {
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'getTransaction',
-    params: [
-      '3BfETUq9sL5UcmfBshxDebEUnnb8FFwW7VP3TcP4vP8qyJtPTUJg2G2zAj7sJcND5B2HeVNaWDxJGACJASFkU97d',
-      { encoding: 'json', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }
-    ]
-  };
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch data:', error);
-    return { error: error.message };
-  }
-});
-
-// Handle IPC call for filtering transactions that aren't related to pump.fun
-ipcMain.handle('fetch-transaction-data-four', async (event, batch) => {
-  try {
-    const filteredTransactions = await batch.filter(
-      (transaction) => transaction.result.meta.err === null
-    );
-    const finalFilter = await filteredTransactions.filter(
-      (transaction) =>
-        transaction.result.transaction.message.accountKeys.includes(
-          '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'
-        ) ||
-        transaction.result.transaction.message.accountKeys.includes(
-          'So11111111111111111111111111111111111111112'
-        ) ||
-        transaction.result.transaction.message.accountKeys.includes(
-          '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'
-        ) ||
-        transaction.result.transaction.message.accountKeys.includes(
-          '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
-        )
-    );
-    return finalFilter;
-  } catch (error) {
-    console.error('Failed to fetch data:', error);
-    return { error: error.message };
-  }
-});
-
-ipcMain.handle('fetch-token-data', async (event, token) => {
-  const apiKey = process.env.REACT_APP_API_KEY;
-  const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 'text',
-        method: 'getAsset',
-        params: {
-          id: `${token}`
-        }
-      })
-    });
+    const response = await fetch(url);
     const data = await response.json();
     console.log(data);
     return data;

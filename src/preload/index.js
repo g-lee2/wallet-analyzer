@@ -36,38 +36,11 @@ const api = {
   checkIfTransactionDetailExists: (rows) =>
     ipcRenderer.invoke('check-if-transaction-detail-exists', rows),
 
-  // Function to update token name and symbol in db
-  updateTokenNameSymbol: (tokenId, tokenName, tokenSymbol) =>
-    ipcRenderer.invoke('update-token-name-symbol', tokenId, tokenName, tokenSymbol),
-
-  // Function to fetch token metadata
-  getAccountTokenName: (tokenId) => ipcRenderer.invoke('get-account-token-name', tokenId),
-
   // Function to fetches all transactions based on public key
-  fetchTransactionData: (pubKey) => ipcRenderer.invoke('fetch-transaction-data', pubKey),
-
-  // Function to retrieve token info from db
-  fetchTokenData: (token) => ipcRenderer.invoke('fetch-token-data', token),
-
-  // Function to sort the fetched signature hashes into an array of JSON-RPC request objects
-  fetchTransactionDataTwo: (signatures) =>
-    ipcRenderer.invoke('fetch-transaction-data-two', signatures),
-
-  // Function to fetch transaction metadata for each signature in the array of JSON-RPC request object
-  fetchTransactionDataThree: (batch) => ipcRenderer.invoke('fetch-transaction-data-three', batch),
-
-  // Function to filter out all failed transactions
-  fetchTransactionDataFour: (batch) => ipcRenderer.invoke('fetch-transaction-data-four', batch),
-
-  // Function to fetch all transactions prior to a specific transaction
-  fetchTransactionDataBefore: (pubKey, transHash) =>
-    ipcRenderer.invoke('fetch-transaction-data-before', pubKey, transHash),
+  fetchTransactionData: (endpoint) => ipcRenderer.invoke('fetch-transaction-data', endpoint),
 
   // Function to retrieve transaction hashes
   getTokenTransactionHash: (tokenId) => ipcRenderer.invoke('get-token-transaction-hash', tokenId),
-
-  // Function to fetch one transaction and the metadata
-  fetchTransactionDataOne: () => ipcRenderer.invoke('fetch-transaction-data-one'),
 
   // Function to update how much it cost to purchase a specific token
   updateCostProfit: () => ipcRenderer.invoke('update-cost-profit'),
@@ -91,16 +64,9 @@ contextBridge.exposeInMainWorld('electron', {
   addTransactionDetail: api.addTransactionDetail,
   getTransactionDetails: api.getTransactionDetails,
   checkIfTransactionDetailExists: api.checkIfTransactionDetailExists,
-  updateTokenNameSymbol: api.updateTokenNameSymbol,
-  getAccountTokenName: api.getAccountTokenName,
   fetchTransactionData: api.fetchTransactionData,
   fetchTokenData: api.fetchTokenData,
-  fetchTransactionDataTwo: api.fetchTransactionDataTwo,
-  fetchTransactionDataThree: api.fetchTransactionDataThree,
-  fetchTransactionDataFour: api.fetchTransactionDataFour,
-  fetchTransactionDataBefore: api.fetchTransactionDataBefore,
   getTokenTransactionHash: api.getTokenTransactionHash,
-  fetchTransactionDataOne: api.fetchTransactionDataOne,
   updateCostProfit: api.updateCostProfit,
   deleteRowsSol: api.deleteRowsSol
 });
