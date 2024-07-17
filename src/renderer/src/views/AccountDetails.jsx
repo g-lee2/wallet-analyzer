@@ -96,9 +96,10 @@ export default function AccountDetails() {
       tokenId: tokenTransfers.map(({ mint }) => mint)[0],
       accountBalanceChange: changeToSol(accountData.filter(account => account.account === publicKey).map(account => account.nativeBalanceChange)[0])
     })); 
-    const finalFilter = filteredItems.filter((item) => item.tokenId !== null);
-    const finalFinalFilter = finalFilter.filter((item) => item.tokenId !== undefined);
-    setTransactionsFromApi([...transactionsFromApi, ...finalFinalFilter]);
+    const filterNonNullItems = filteredItems.filter((item) => item.tokenId !== null);
+    const filterUndefinedItems = filterNonNullItems.filter((item) => item.tokenId !== undefined);
+    const filterPumpFunItems = filterUndefinedItems.filter((item) => item.tokenId.includes("pump"));
+    setTransactionsFromApi([...transactionsFromApi, ...filterPumpFunItems]);
   }, [data]);
 
   // This function prepares the transactions with the necessary extracted information to populate the relevant database fields.
@@ -143,7 +144,6 @@ export default function AccountDetails() {
   useEffect(() => {
     window.electron.checkIfTransactionDetailExists(transactionUpdateAfterApi).then((notFoundRows) => {
       setPreTransactionDetailUpdate(notFoundRows);
-      console.log(notFoundRows);
     });
   }, [transactionUpdateAfterApi]);
 
